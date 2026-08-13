@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" type="image/png" href="logo.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>M Lhuillier — Automated BCTSR Reconciler</title>
+<link rel="icon" type="image/png" href="logo.png">
 
 <!-- Fonts: Inter for crisp UI + IBM Plex Mono for high-density tabular precision -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -92,10 +92,19 @@
     color: var(--primary);
     font-weight: 900;
     font-size: 18px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     border-radius: var(--radius-sm);
     letter-spacing: -0.5px;
     box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-badge img {
+    height: 26px;
+    width: auto;
+    object-fit: contain;
   }
 
   h1 {
@@ -514,7 +523,9 @@
 <header id="app-header">
   <div class="header-content">
     <div class="header-title-box">
-      <div class="logo-badge">ML</div>
+      <div class="logo-badge">
+        <img src="logo.png" alt="ML Logo" onerror="this.style.display='none'; this.parentElement.innerText='ML';">
+      </div>
       <div>
         <h1>Automated BCTSR Reconciler</h1>
         <div class="header-sub">Master Reconciliation & Sub-Report Audit Engine</div>
