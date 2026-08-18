@@ -1223,41 +1223,55 @@ function countKPPOQty(sheetData) {
   return qty;
 }
 
-// MLG PO CALCULATORS
+// REVISED ROBUST MLG PO CALCULATORS (Updated Payment Solutions Logic)
 function sumMLGPO(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amountCol = -1, headerIdx = -1;
 
-  for (let i = 0; i < Math.min(15, sheetData.length); i++) {
+  for (let i = 0; i < Math.min(25, sheetData.length); i++) {
     let row = sheetData[i];
     if (!row || !Array.isArray(row)) continue;
     for (let c_i = 0; c_i < row.length; c_i++) {
-      let c_str = String(row[c_i] || '').trim().toLowerCase();
-      if (['po amount', 'payout amount', 'amount', 'principal'].includes(c_str)) {
-        if (['po amount', 'payout amount'].includes(c_str)) {
-          amountCol = c_i;
-          headerIdx = i;
-          break;
-        } else if (amountCol === -1) {
-          amountCol = c_i;
-          headerIdx = i;
-        }
+      let c_str = String(row[c_i] || '').trim().toLowerCase().replace(/[_-\s]+/g, ' ');
+      if (['po amount', 'payout amount', 'net amount', 'paid amount', 'total amount', 'principal'].includes(c_str)) {
+        amountCol = c_i;
+        headerIdx = i;
+        break;
       }
     }
-    if (amountCol !== -1 && ['po amount', 'payout amount'].includes(String(sheetData[headerIdx][amountCol] || '').trim().toLowerCase())) break;
+    if (amountCol !== -1) break;
   }
 
-  if (amountCol === -1) amountCol = 15;
+  if (amountCol === -1) {
+    headerIdx = 0;
+    for (let i = sheetData.length - 1; i >= 0; i--) {
+      let row = sheetData[i];
+      if (!row || !Array.isArray(row)) continue;
+      for (let c_i = row.length - 1; c_i >= 0; c_i--) {
+        let val = parseFloat(String(row[c_i] || '').replace(/,/g, '').trim());
+        if (!isNaN(val) && val > 0) {
+          amountCol = c_i;
+          break;
+        }
+      }
+      if (amountCol !== -1) break;
+    }
+  }
+
+  if (amountCol === -1) return 0;
 
   let totalAmt = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
     let row = sheetData[i];
-    if (isValidDataRow(row) && row.length > amountCol) {
-      let col0 = String(row[0] || '').trim().toLowerCase();
-      if (col0 === 'total' || col0.includes('total')) continue;
-      let valStr = String(row[amountCol] || '').replace(/,/g, '').trim();
-      let val = parseFloat(valStr);
-      if (!isNaN(val)) totalAmt += val;
+    if (!row || !Array.isArray(row) || row.length <= amountCol) continue;
+    
+    let lineStr = row.join(' ').toLowerCase();
+    if (lineStr.includes('grand total') || lineStr.includes('subtotal')) continue;
+
+    let valStr = String(row[amountCol] || '').replace(/,/g, '').trim();
+    let val = parseFloat(valStr);
+    if (!isNaN(val)) {
+      totalAmt += val;
     }
   }
   return totalAmt;
@@ -1267,36 +1281,50 @@ function countMLGPO(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amountCol = -1, headerIdx = -1;
 
-  for (let i = 0; i < Math.min(15, sheetData.length); i++) {
+  for (let i = 0; i < Math.min(25, sheetData.length); i++) {
     let row = sheetData[i];
     if (!row || !Array.isArray(row)) continue;
     for (let c_i = 0; c_i < row.length; c_i++) {
-      let c_str = String(row[c_i] || '').trim().toLowerCase();
-      if (['po amount', 'payout amount', 'amount', 'principal'].includes(c_str)) {
-        if (['po amount', 'payout amount'].includes(c_str)) {
-          amountCol = c_i;
-          headerIdx = i;
-          break;
-        } else if (amountCol === -1) {
-          amountCol = c_i;
-          headerIdx = i;
-        }
+      let c_str = String(row[c_i] || '').trim().toLowerCase().replace(/[_-\s]+/g, ' ');
+      if (['po amount', 'payout amount', 'net amount', 'paid amount', 'total amount', 'principal'].includes(c_str)) {
+        amountCol = c_i;
+        headerIdx = i;
+        break;
       }
     }
-    if (amountCol !== -1 && ['po amount', 'payout amount'].includes(String(sheetData[headerIdx][amountCol] || '').trim().toLowerCase())) break;
+    if (amountCol !== -1) break;
   }
 
-  if (amountCol === -1) amountCol = 15;
+  if (amountCol === -1) {
+    headerIdx = 0;
+    for (let i = sheetData.length - 1; i >= 0; i--) {
+      let row = sheetData[i];
+      if (!row || !Array.isArray(row)) continue;
+      for (let c_i = row.length - 1; c_i >= 0; c_i--) {
+        let val = parseFloat(String(row[c_i] || '').replace(/,/g, '').trim());
+        if (!isNaN(val) && val > 0) {
+          amountCol = c_i;
+          break;
+        }
+      }
+      if (amountCol !== -1) break;
+    }
+  }
+
+  if (amountCol === -1) return 0;
 
   let count = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
     let row = sheetData[i];
-    if (isValidDataRow(row) && row.length > amountCol) {
-      let col0 = String(row[0] || '').trim().toLowerCase();
-      if (col0 === 'total' || col0.includes('total')) continue;
-      let valStr = String(row[amountCol] || '').replace(/,/g, '').trim();
-      let val = parseFloat(valStr);
-      if (!isNaN(val) && val > 0) count++;
+    if (!row || !Array.isArray(row) || row.length <= amountCol) continue;
+    
+    let lineStr = row.join(' ').toLowerCase();
+    if (lineStr.includes('grand total') || lineStr.includes('subtotal')) continue;
+
+    let valStr = String(row[amountCol] || '').replace(/,/g, '').trim();
+    let val = parseFloat(valStr);
+    if (!isNaN(val) && val > 0) {
+      count++;
     }
   }
   return count;
@@ -1791,32 +1819,17 @@ function countMCCashOut(sheetData, targetCurr = "PHP") {
   return count;
 }
 
-// UPDATED PAYOUT CSV FUNCTIONS (STRICTLY READS COLUMN N = INDEX 13)
+// RESTORED ORIGINAL PAYOUT CSV FUNCTIONS
 function sumPayoutCSV(sheetData, targetCurr = "PHP") {
-  if (!sheetData || !Array.isArray(sheetData)) return 0;
   let total = 0;
-  let targetC = targetCurr.toUpperCase().trim();
-
   for (let i = 0; i < sheetData.length; i++) {
     let row = sheetData[i];
-    
-    // Siguraduhon nga naa tay Column N (Index 13)
-    if (isValidDataRow(row) && row.length > 13) {
-      
-      // Pagkuha sa Currency (Column L o Column I)
-      let currColIdx = row.length > 11 ? 11 : 8; 
-      let rowCurr = String(row[currColIdx] || '').trim().toUpperCase();
-      
-      if (!rowCurr) rowCurr = 'PHP';
-      if (rowCurr === 'PESO') rowCurr = 'PHP';
-
-      // Kon PHP ang filter, kuhaon ang amount sa Column N (Index 13)
-      if (rowCurr === targetC) {
-        let valStr = String(row[13] || '').replace(/,/g, '').trim(); // Column N = Index 13
+    if (isValidDataRow(row) && row.length > 9) {
+      let curr = String(row[8] || '').trim().toUpperCase();
+      if (curr === targetCurr.toUpperCase()) {
+        let valStr = String(row[9] || '').replace(/,/g, '').trim();
         let val = parseFloat(valStr);
-        if (!isNaN(val)) {
-          total += val;
-        }
+        if (!isNaN(val)) total += val;
       }
     }
   }
@@ -1824,27 +1837,12 @@ function sumPayoutCSV(sheetData, targetCurr = "PHP") {
 }
 
 function countPayoutCSV(sheetData, targetCurr = "PHP") {
-  if (!sheetData || !Array.isArray(sheetData)) return 0;
   let count = 0;
-  let targetC = targetCurr.toUpperCase().trim();
-
   for (let i = 0; i < sheetData.length; i++) {
     let row = sheetData[i];
-    
-    if (isValidDataRow(row) && row.length > 13) {
-      let currColIdx = row.length > 11 ? 11 : 8;
-      let rowCurr = String(row[currColIdx] || '').trim().toUpperCase();
-      
-      if (!rowCurr) rowCurr = 'PHP';
-      if (rowCurr === 'PESO') rowCurr = 'PHP';
-
-      if (rowCurr === targetC) {
-        let valStr = String(row[13] || '').replace(/,/g, '').trim(); // Column N = Index 13
-        let val = parseFloat(valStr);
-        if (!isNaN(val) && val > 0) {
-          count++;
-        }
-      }
+    if (isValidDataRow(row) && row.length > 8) {
+      let curr = String(row[8] || '').trim().toUpperCase();
+      if (curr === targetCurr.toUpperCase()) count++;
     }
   }
   return count;
