@@ -1223,55 +1223,25 @@ function countKPPOQty(sheetData) {
   return qty;
 }
 
-// REVISED ROBUST MLG PO CALCULATORS (Updated Payment Solutions Logic)
+// MLG PO CALCULATORS (STRICTLY READS COLUMN N = INDEX 13 FOR CURRENCY & COLUMN P = INDEX 15 FOR PO AMOUNT)
 function sumMLGPO(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
-  let amountCol = -1, headerIdx = -1;
+  let totalAmt = 0;
 
-  for (let i = 0; i < Math.min(25, sheetData.length); i++) {
+  for (let i = 0; i < sheetData.length; i++) {
     let row = sheetData[i];
-    if (!row || !Array.isArray(row)) continue;
-    for (let c_i = 0; c_i < row.length; c_i++) {
-      let c_str = String(row[c_i] || '').trim().toLowerCase().replace(/[_-\s]+/g, ' ');
-      if (['po amount', 'payout amount', 'net amount', 'paid amount', 'total amount', 'principal'].includes(c_str)) {
-        amountCol = c_i;
-        headerIdx = i;
-        break;
-      }
-    }
-    if (amountCol !== -1) break;
-  }
+    
+    if (isValidDataRow(row) && row.length > 15) {
+      let rowCurr = String(row[13] || '').trim().toUpperCase();
+      if (!rowCurr || rowCurr === 'PESO') rowCurr = 'PHP';
 
-  if (amountCol === -1) {
-    headerIdx = 0;
-    for (let i = sheetData.length - 1; i >= 0; i--) {
-      let row = sheetData[i];
-      if (!row || !Array.isArray(row)) continue;
-      for (let c_i = row.length - 1; c_i >= 0; c_i--) {
-        let val = parseFloat(String(row[c_i] || '').replace(/,/g, '').trim());
-        if (!isNaN(val) && val > 0) {
-          amountCol = c_i;
-          break;
+      if (rowCurr === 'PHP') {
+        let valStr = String(row[15] || '').replace(/,/g, '').trim();
+        let val = parseFloat(valStr);
+        if (!isNaN(val)) {
+          totalAmt += val;
         }
       }
-      if (amountCol !== -1) break;
-    }
-  }
-
-  if (amountCol === -1) return 0;
-
-  let totalAmt = 0;
-  for (let i = headerIdx + 1; i < sheetData.length; i++) {
-    let row = sheetData[i];
-    if (!row || !Array.isArray(row) || row.length <= amountCol) continue;
-    
-    let lineStr = row.join(' ').toLowerCase();
-    if (lineStr.includes('grand total') || lineStr.includes('subtotal')) continue;
-
-    let valStr = String(row[amountCol] || '').replace(/,/g, '').trim();
-    let val = parseFloat(valStr);
-    if (!isNaN(val)) {
-      totalAmt += val;
     }
   }
   return totalAmt;
@@ -1279,52 +1249,22 @@ function sumMLGPO(sheetData) {
 
 function countMLGPO(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
-  let amountCol = -1, headerIdx = -1;
+  let count = 0;
 
-  for (let i = 0; i < Math.min(25, sheetData.length); i++) {
+  for (let i = 0; i < sheetData.length; i++) {
     let row = sheetData[i];
-    if (!row || !Array.isArray(row)) continue;
-    for (let c_i = 0; c_i < row.length; c_i++) {
-      let c_str = String(row[c_i] || '').trim().toLowerCase().replace(/[_-\s]+/g, ' ');
-      if (['po amount', 'payout amount', 'net amount', 'paid amount', 'total amount', 'principal'].includes(c_str)) {
-        amountCol = c_i;
-        headerIdx = i;
-        break;
-      }
-    }
-    if (amountCol !== -1) break;
-  }
+    
+    if (isValidDataRow(row) && row.length > 15) {
+      let rowCurr = String(row[13] || '').trim().toUpperCase();
+      if (!rowCurr || rowCurr === 'PESO') rowCurr = 'PHP';
 
-  if (amountCol === -1) {
-    headerIdx = 0;
-    for (let i = sheetData.length - 1; i >= 0; i--) {
-      let row = sheetData[i];
-      if (!row || !Array.isArray(row)) continue;
-      for (let c_i = row.length - 1; c_i >= 0; c_i--) {
-        let val = parseFloat(String(row[c_i] || '').replace(/,/g, '').trim());
+      if (rowCurr === 'PHP') {
+        let valStr = String(row[15] || '').replace(/,/g, '').trim();
+        let val = parseFloat(valStr);
         if (!isNaN(val) && val > 0) {
-          amountCol = c_i;
-          break;
+          count++;
         }
       }
-      if (amountCol !== -1) break;
-    }
-  }
-
-  if (amountCol === -1) return 0;
-
-  let count = 0;
-  for (let i = headerIdx + 1; i < sheetData.length; i++) {
-    let row = sheetData[i];
-    if (!row || !Array.isArray(row) || row.length <= amountCol) continue;
-    
-    let lineStr = row.join(' ').toLowerCase();
-    if (lineStr.includes('grand total') || lineStr.includes('subtotal')) continue;
-
-    let valStr = String(row[amountCol] || '').replace(/,/g, '').trim();
-    let val = parseFloat(valStr);
-    if (!isNaN(val) && val > 0) {
-      count++;
     }
   }
   return count;
