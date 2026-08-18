@@ -1791,16 +1791,32 @@ function countMCCashOut(sheetData, targetCurr = "PHP") {
   return count;
 }
 
+// UPDATED PAYOUT CSV FUNCTIONS (STRICTLY READS COLUMN N = INDEX 13)
 function sumPayoutCSV(sheetData, targetCurr = "PHP") {
+  if (!sheetData || !Array.isArray(sheetData)) return 0;
   let total = 0;
+  let targetC = targetCurr.toUpperCase().trim();
+
   for (let i = 0; i < sheetData.length; i++) {
     let row = sheetData[i];
-    if (isValidDataRow(row) && row.length > 9) {
-      let curr = String(row[8] || '').trim().toUpperCase();
-      if (curr === targetCurr.toUpperCase()) {
-        let valStr = String(row[9] || '').replace(/,/g, '').trim();
+    
+    // Siguraduhon nga naa tay Column N (Index 13)
+    if (isValidDataRow(row) && row.length > 13) {
+      
+      // Pagkuha sa Currency (Column L o Column I)
+      let currColIdx = row.length > 11 ? 11 : 8; 
+      let rowCurr = String(row[currColIdx] || '').trim().toUpperCase();
+      
+      if (!rowCurr) rowCurr = 'PHP';
+      if (rowCurr === 'PESO') rowCurr = 'PHP';
+
+      // Kon PHP ang filter, kuhaon ang amount sa Column N (Index 13)
+      if (rowCurr === targetC) {
+        let valStr = String(row[13] || '').replace(/,/g, '').trim(); // Column N = Index 13
         let val = parseFloat(valStr);
-        if (!isNaN(val)) total += val;
+        if (!isNaN(val)) {
+          total += val;
+        }
       }
     }
   }
@@ -1808,12 +1824,27 @@ function sumPayoutCSV(sheetData, targetCurr = "PHP") {
 }
 
 function countPayoutCSV(sheetData, targetCurr = "PHP") {
+  if (!sheetData || !Array.isArray(sheetData)) return 0;
   let count = 0;
+  let targetC = targetCurr.toUpperCase().trim();
+
   for (let i = 0; i < sheetData.length; i++) {
     let row = sheetData[i];
-    if (isValidDataRow(row) && row.length > 8) {
-      let curr = String(row[8] || '').trim().toUpperCase();
-      if (curr === targetCurr.toUpperCase()) count++;
+    
+    if (isValidDataRow(row) && row.length > 13) {
+      let currColIdx = row.length > 11 ? 11 : 8;
+      let rowCurr = String(row[currColIdx] || '').trim().toUpperCase();
+      
+      if (!rowCurr) rowCurr = 'PHP';
+      if (rowCurr === 'PESO') rowCurr = 'PHP';
+
+      if (rowCurr === targetC) {
+        let valStr = String(row[13] || '').replace(/,/g, '').trim(); // Column N = Index 13
+        let val = parseFloat(valStr);
+        if (!isNaN(val) && val > 0) {
+          count++;
+        }
+      }
     }
   }
   return count;
