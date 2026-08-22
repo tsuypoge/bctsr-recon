@@ -796,7 +796,7 @@ function sumIntlSendoutCharges(sheetData, targetCurr = "PHP") {
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
     let row = sheetData[i];
     if (isValidDataRow(row) && row.length > ctcCol) {
-      let rowCurr = (currCol !== -1 && row.length > ctcCol) ? String(row[ctcCol] || '').trim().toUpperCase() : targetC;
+      let rowCurr = (currCol !== -1 && row.length > ctcCol) ? String(row[currCol] || '').trim().toUpperCase() : targetC;
       if (!rowCurr) rowCurr = targetC;
       if (rowCurr === 'PESO') rowCurr = 'PHP';
 
@@ -845,7 +845,7 @@ function countIntlSendout(sheetData, targetCurr = "PHP") {
   return count;
 }
 
-// DYNAMIC BILLS PAYMENT CALCULATORS
+// DYNAMIC BILLS PAYMENT CALCULATORS (COLUMN J / INDEX 9 & COLUMN K / INDEX 10)
 function sumBPPrincipal(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amtCol = -1, headerIdx = -1;
@@ -864,7 +864,7 @@ function sumBPPrincipal(sheetData) {
     if (amtCol !== -1) break;
   }
 
-  if (amtCol === -1) amtCol = 9;
+  if (amtCol === -1) amtCol = 9; // Fallback: Column J (Index 9)
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
@@ -896,7 +896,7 @@ function sumBPCharges(sheetData) {
     if (chargeCol !== -1) break;
   }
 
-  if (chargeCol === -1) chargeCol = 10;
+  if (chargeCol === -1) chargeCol = 10; // Fallback: Column K (Index 10)
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
