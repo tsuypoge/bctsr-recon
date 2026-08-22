@@ -705,7 +705,7 @@ function getCurrencySymbol(curr) {
   }
 }
 
-// AUTOMATIC SHEET TYPE DETECTOR (B2B vs B2FD)
+// AUTOMATIC SHEET TYPE DETECTOR (B2B vs B2FD vs BP)
 function detectSheetType(rows, defaultTarget) {
   if (!rows || !Array.isArray(rows) || rows.length === 0) return defaultTarget;
   
@@ -720,6 +720,8 @@ function detectSheetType(rows, defaultTarget) {
     return "B2B";
   } else if (fullStr.includes("bank") && fullStr.includes("account")) {
     return "B2FD";
+  } else if (fullStr.includes("biller") || fullStr.includes("bill amount") || fullStr.includes("account no")) {
+    return "BP";
   }
   
   return defaultTarget;
@@ -796,7 +798,7 @@ function sumIntlSendoutCharges(sheetData, targetCurr = "PHP") {
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
     let row = sheetData[i];
     if (isValidDataRow(row) && row.length > ctcCol) {
-      let rowCurr = (currCol !== -1 && row.length > ctcCol) ? String(row[currCol] || '').trim().toUpperCase() : targetC;
+      let rowCurr = (currCol !== -1 && row.length > ctcCol) ? String(row[ctcCol] || '').trim().toUpperCase() : targetC;
       if (!rowCurr) rowCurr = targetC;
       if (rowCurr === 'PESO') rowCurr = 'PHP';
 
