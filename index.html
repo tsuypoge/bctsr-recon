@@ -1718,7 +1718,7 @@ function isValidDataRow(row) {
   if (!row || !Array.isArray(row) || row.length === 0) return false;
   let col0 = String(row[0] || '').trim();
   if (!col0) return false;
-  if (/^(summary|adjustments|net|total|m\.\s*lhuillier|mlhuillier|particulars|legend|region|count|coi_number|personal|date|branch|employee|insurance|transaction_date|mlkp|generated|printed|run)/i.test(col0)) return false;
+  if (/^(summary|adjustments|net|total|m\.\s*lhuillier|mlhuillier|particulars|legend|region|count|coi_number|personal|date|branch|employee|insurance|transaction_date|mlkp|generated|printed|run|accumulated|resource)/i.test(col0)) return false;
   if (/report|philippines/i.test(col0)) return false;
   return true;
 }
@@ -2644,7 +2644,7 @@ function extractDataFromRows(rows) {
     if (particular === 'Cash Transactions') { currentCategory = "Cash"; return; }
     if (particular === 'Non-Cash Transactions') { currentCategory = "Non-Cash"; return; }
 
-    if (particular.toLowerCase() === 'particulars' || particular === '' || particular.includes('M LHUILLIER') || particular.includes('BC TRANSACTION') || particular.includes('(BCTSR)') || particular.startsWith('•') || particular === 'Legend') {
+    if (particular.toLowerCase() === 'particulars' || particular === '' || particular.includes('M LHUILLIER') || particular.includes('BC TRANSACTION') || particular.includes('(BCTSR)') || particular.startsWith('•') || particular === 'Legend' || particular.toLowerCase().includes('accumulated cash shortage') || particular.toLowerCase().includes('resource')) {
       return;
     }
 
@@ -2691,7 +2691,7 @@ function parsePdfLines(pdfRows) {
     if (numbers.length > 0) {
       let firstNumIdx = rowItems.findIndex(str => /^[\d,]+(\.\d+)?$/.test(str.replace(/,/g, '')));
       let particular = rowItems.slice(0, firstNumIdx).join(" ").trim();
-      if (particular && !particular.includes("Ending Balance") && !particular.includes("Beginning Balance") && !particular.includes("Particulars") && !particular.startsWith("•")) {
+      if (particular && !particular.includes("Ending Balance") && !particular.includes("Beginning Balance") && !particular.includes("Particulars") && !particular.startsWith("•") && !particular.toLowerCase().includes("accumulated cash shortage") && !particular.toLowerCase().includes("resource")) {
         let qtyDisplay = '—';
         let amount = 0, cashIn = 0, cashOut = 0;
         if (numbers.length >= 3) {
