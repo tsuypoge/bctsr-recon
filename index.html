@@ -444,7 +444,7 @@
     </div>
 
     <button class="btn-action btn-export" id="btn-upload-master" onclick="document.getElementById('file-upload').click()">
-      <span>📄</span> Upload Master BCTSR File(s)
+      <span>📄</span> Upload BCTSR File(s)
     </button>
     <input type="file" id="file-upload" accept=".pdf, .xlsx, .xls, .csv, .html" multiple style="display:none;" onchange="handleFileUpload(event)">
 
@@ -491,7 +491,7 @@
         </tr>
       </thead>
       <tbody id="recon-body">
-        <tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">No file uploaded for this branch & currency tab yet. Please click 'Upload Master BCTSR File(s)' above.</td></tr>
+        <tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">No file uploaded for this branch & currency tab yet. Please click 'Upload BCTSR File(s)' above.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1991,7 +1991,7 @@ function renderActiveCurrencyData() {
     renderReconciliationTable(data);
   } else {
     document.getElementById('summary-bar').style.display = 'none';
-    document.getElementById('recon-body').innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">No BCTSR file uploaded for branch '${activeBranch}' on the${activeCurrencyTab} tab yet. Please click 'Upload Master BCTSR File(s)' above.</td></tr>`;
+    document.getElementById('recon-body').innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">No BCTSR file uploaded for branch '${activeBranch}' on the${activeCurrencyTab} tab yet. Please click 'Upload BCTSR File(s)' above.</td></tr>`;
   }
 
   let adjData = bData.manualAdjDataStore[activeCurrencyTab];
