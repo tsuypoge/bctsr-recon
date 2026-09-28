@@ -6,10 +6,10 @@
 <title>M Lhuillier — Automated BCTSR Reconciler</title>
 <link rel="icon" type="image/png" href="logo.png">
 
-<!-- Fonts: Inter for crisp UI + IBM Plex Mono for high-density tabular precision -->
+<!-- Fonts: Oswald for bold headlines + Plus Jakarta Sans for modern UI + IBM Plex Mono for numbers -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Oswald:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <!-- SheetJS (Excel/CSV Parser) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -42,7 +42,8 @@
     --mismatch-bg: #fef2f2;
     --mismatch-border: #fecaca;
 
-    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-display: 'Oswald', 'Impact', sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
 
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -143,9 +144,11 @@
   }
 
   .branch-display-wrapper .branch-name-val {
-    font-size: 13px;
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
     color: var(--text-main);
+    letter-spacing: 0.5px;
     white-space: nowrap;
   }
 
@@ -222,6 +225,15 @@
     margin-top: 4px;
     color: var(--primary);
     font-family: var(--font-mono);
+  }
+
+  .info-item .val-branch-display {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    color: var(--primary-dark);
   }
 
   .archive-badge {
@@ -402,6 +414,14 @@
   .inner-table td { padding: 6px 10px; font-size: 11px; border-bottom: 1px solid #f1f5f9; color: #334155; }
   .expand-icon { font-size: 10px; color: var(--primary); display: inline-block; width: 14px; cursor: pointer; user-select: none; }
 
+  h2.section-header-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--primary-dark);
+  }
+
   @media print {
     .upload-action-bar, .currency-tabs-bar, .btn-upload-sub, .btn-remove-sub, .btn-add-remark, .sub-upload-wrapper, .manual-input-wrapper, .remarks-input-wrapper, .hide-print { display: none !important; }
     body { background: #fff; padding-bottom: 0; }
@@ -448,7 +468,7 @@
 
   <!-- EXECUTIVE KPI SUMMARY BAR -->
   <div class="summary-bar" id="summary-bar" style="display:none;">
-    <div class="info-item"><label>Branch Name</label><div class="val" id="val-branch">—</div></div>
+    <div class="info-item"><label>Branch Name</label><div class="val-branch-display" id="val-branch">—</div></div>
     <div class="info-item"><label>Date Range</label><div class="val" id="val-date" style="color:var(--text-main);">—</div></div>
     <div class="info-item"><label>Active Currency Tab</label><div class="val" id="val-currency" style="color:#0284c7;">PHP</div></div>
     <div class="info-item"><label>Status / Mode</label><div class="val" id="val-status-mode"><span class="archive-badge" id="archive-status-tag">🔓 EDITABLE</span></div></div>
@@ -480,7 +500,7 @@
   <div id="manual-adj-section" style="margin-top: 40px; padding-top: 24px; border-top: 2px dashed #cbd5e1;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
       <div>
-        <h2 style="font-size:17px; font-weight:700; color:var(--primary-dark);">Manual Adjustment Pivot Summary (<span id="manual-adj-curr-title">PHP</span>)</h2>
+        <h2 class="section-header-title">Manual Adjustment Pivot Summary (<span id="manual-adj-curr-title">PHP</span>)</h2>
         <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Upload the Manual Adjustment Report. Rows automatically aggregate into their designated currency tab.</div>
       </div>
       
