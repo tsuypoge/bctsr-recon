@@ -705,18 +705,20 @@ function getCurrencySymbol(curr) {
   }
 }
 
-// AUTOMATIC SHEET TYPE DETECTOR (B2B vs B2FD)
+// AUTOMATIC SHEET TYPE DETECTOR (B2B vs B2FD vs BP)
 function detectSheetType(rows, defaultTarget) {
   if (!rows || !Array.isArray(rows) || rows.length === 0) return defaultTarget;
   
   let fullStr = "";
-  for (let i = 0; i < Math.min(15, rows.length); i++) {
+  for (let i = 0; i < Math.min(20, rows.length); i++) {
     if (rows[i] && Array.isArray(rows[i])) {
       fullStr += " " + rows[i].join(" ").toLowerCase();
     }
   }
 
-  if (fullStr.includes("ccbranch") || fullStr.includes("recvd. from") || fullStr.includes("given to") || fullStr.includes("ref no.")) {
+  if (fullStr.includes("bills payment") || fullStr.includes("bills pay") || fullStr.includes("bp branch transaction report")) {
+    return "BP";
+  } else if (fullStr.includes("ccbranch") || fullStr.includes("recvd. from") || fullStr.includes("given to") || fullStr.includes("ref no.")) {
     return "B2B";
   } else if (fullStr.includes("bank") && fullStr.includes("account")) {
     return "B2FD";
@@ -845,17 +847,17 @@ function countIntlSendout(sheetData, targetCurr = "PHP") {
   return count;
 }
 
-// DYNAMIC BILLS PAYMENT CALCULATORS (LOOKS FOR "Amount Paid" & "Charge" OR FALLBACK TO INDEX 9 & 10)
+// DYNAMIC BILLS PAYMENT CALCULATORS
 function sumBPPrincipal(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amtCol = -1, headerIdx = -1;
 
-  for (let i = 0; i < Math.min(15, sheetData.length); i++) {
+  for (let i = 0; i < Math.min(25, sheetData.length); i++) {
     let row = sheetData[i];
     if (!row || !Array.isArray(row)) continue;
     for (let c_i = 0; c_i < row.length; c_i++) {
       let c_str = String(row[c_i] || '').trim().toLowerCase();
-      if (['amount paid', 'amount', 'principal', 'bill amount', 'trans amount'].includes(c_str)) {
+      if (['amount paid', 'amount', 'principal', 'bill amount', 'trans amount', 'total paid'].includes(c_str)) {
         amtCol = c_i;
         headerIdx = i;
         break;
@@ -864,12 +866,12 @@ function sumBPPrincipal(sheetData) {
     if (amtCol !== -1) break;
   }
 
-  if (amtCol === -1) amtCol = 9; // Fallback: Column J (Index 9)
+  if (amtCol === -1) amtCol = 9; // Fallback: Column J (Amount Paid)
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
     let row = sheetData[i];
-    if (isValidDataRow(row) && row.length > amtCol) {
+    if (row && row.length > amtCol) {
       let valStr = String(row[amtCol] || '').replace(/,/g, '').trim();
       let val = parseFloat(valStr);
       if (!isNaN(val)) total += val;
@@ -882,7 +884,7 @@ function sumBPCharges(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let chargeCol = -1, headerIdx = -1;
 
-  for (let i = 0; i < Math.min(15, sheetData.length); i++) {
+  for (let i = 0; i < Math.min(25, sheetData.length); i++) {
     let row = sheetData[i];
     if (!row || !Array.isArray(row)) continue;
     for (let c_i = 0; c_i < row.length; c_i++) {
@@ -896,18 +898,49 @@ function sumBPCharges(sheetData) {
     if (chargeCol !== -1) break;
   }
 
-  if (chargeCol === -1) chargeCol = 10; // Fallback: Column K (Index 10)
+  if (chargeCol === -1) chargeCol = 10; // Fallback: Column K (Charge)
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
     let row = sheetData[i];
-    if (isValidDataRow(row) && row.length > chargeCol) {
+    if (row && row.length > chargeCol) {
       let valStr = String(row[chargeCol] || '').replace(/,/g, '').trim();
       let val = parseFloat(valStr);
       if (!isNaN(val)) total += val;
     }
   }
   return total;
+}
+
+function countBPRows(sheetData) {
+  if (!sheetData || !Array.isArray(sheetData)) return 0;
+  let headerIdx = -1;
+
+  for (let i = 0; i < Math.min(25, sheetData.length); i++) {
+    let row = sheetData[i];
+    if (!row || !Array.isArray(row)) continue;
+    for (let c_i = 0; c_i < row.length; c_i++) {
+      let c_str = String(row[c_i] || '').trim().toLowerCase();
+      if (['amount paid', 'control no.', 'reference no.', 'payment to'].includes(c_str)) {
+        headerIdx = i;
+        break;
+      }
+    }
+    if (headerIdx !== -1) break;
+  }
+
+  let count = 0;
+  for (let i = headerIdx + 1; i < sheetData.length; i++) {
+    let row = sheetData[i];
+    if (row && row.length > 0) {
+      let val1 = String(row[0] || '').trim();
+      let val2 = String(row[1] || '').trim();
+      if ((val1 && !isNaN(parseInt(val1))) || (val2 && !isNaN(Date.parse(val2)))) {
+        count++;
+      }
+    }
+  }
+  return count > 0 ? count : countRows(sheetData);
 }
 
 // MCASH CASH IN & SERVICE CHARGE CALCULATORS
@@ -1667,8 +1700,8 @@ const REPORT_RULES = {
   
   "KP Domestic Payout": { sheet: "KPPO", getSum: (data) => sumKPPOAmount(data), getQty: (data) => countKPPOQty(data) },
 
-  "Bills Payment Principal": { sheet: "BP", getSum: (data) => sumBPPrincipal(data), getQty: (data) => countRows(data) },
-  "Bills Payment Charges": { sheet: "BP", getSum: (data) => sumBPCharges(data), getQty: (data) => countRows(data) },
+  "Bills Payment Principal": { sheet: "BP", altSheet: "BILLS PAYMENT", getSum: (data) => sumBPPrincipal(data), getQty: (data) => countBPRows(data) },
+  "Bills Payment Charges": { sheet: "BP", altSheet: "BILLS PAYMENT", getSum: (data) => sumBPCharges(data), getQty: (data) => countBPRows(data) },
 
   "Remit to Account": { sheet: "QRPH", getSum: (data) => sumCol(data, 11), getQty: (data) => countRows(data) },
   "Remit to Account Charges": { sheet: "QRPH", getSum: (data) => sumCol(data, 10), getQty: (data) => countRows(data) },
@@ -2059,7 +2092,7 @@ function renderActiveCurrencyData() {
     renderReconciliationTable(data);
   } else {
     document.getElementById('summary-bar').style.display = 'none';
-    document.getElementById('recon-body').innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">No BCTSR file uploaded for branch '${activeBranch}' on the ${activeCurrencyTab} tab yet. Please click 'Upload Master BCTSR File(s)' above.</td></tr>`;
+    document.getElementById('recon-body').innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">No BCTSR file uploaded for branch '${activeBranch}' on the${activeCurrencyTab} tab yet. Please click 'Upload Master BCTSR File(s)' above.</td></tr>`;
   }
 
   let adjData = bData.manualAdjDataStore[activeCurrencyTab];
@@ -2117,8 +2150,7 @@ function exportToPDF() {
 
       manualAdjExportHtml = `
       <div style="margin-top:30px;">
-          <h3 style="font-size:15px; color:#a3241c; margin-bottom:10px; border-bottom: 2px solid #d4af37; padding-bottom: 4px;">Manual Adjustment Pivot Summary (${activeCurrencyTab})</h3>
-          ${clonedAdjContainer.outerHTML}
+          <h3 style="font-size:15px; color:#a3241c; margin-bottom:10px; border-bottom: 2px solid #d4af37; padding-bottom: 4px;">Manual Adjustment Pivot Summary (${activeCurrencyTab})</h3>${clonedAdjContainer.outerHTML}
       </div>`;
   }
 
@@ -2572,8 +2604,7 @@ function renderManualAdjustmentPivot(groupedData) {
       <td style="font-weight:700; color:var(--text-main);">
          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
            <span id="icon-det-${idx}" class="expand-icon" onclick="toggleManualAdjDetails('${idx}'); event.stopPropagation();">▶</span>
-           <span>${desc}</span>
-           ${remarkTagDisplay}
+           <span>${desc}</span>${remarkTagDisplay}
          </div>
       </td>
       <td class="num-cell" style="text-align:center;">${data.totalQty}</td>
@@ -2789,7 +2820,11 @@ function renderReconciliationTable(data) {
         reportTotal = manualInputs[itemKey] !== undefined ? manualInputs[itemKey] : null;
       } else {
         matchedSheet = rule.sheet;
-        let activeSheet = sheetsStore[rule.sheet] || sheetsStore[rule.altSheet];
+        let activeSheet = sheetsStore[rule.sheet] || 
+                          sheetsStore[rule.altSheet] || 
+                          sheetsStore["BP"] || 
+                          sheetsStore["BILLS PAYMENT"] || 
+                          sheetsStore["BILLSPAYMENT"];
         
         if (item.particular === "Fund Transfer Given to BC/HO") {
           let b2bSheet = sheetsStore["B2B"] || sheetsStore["B2B PHP"];
