@@ -64,91 +64,6 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Header Bar */
-  header {
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-    color: #ffffff;
-    padding: 16px 32px;
-    border-bottom: 3px solid var(--gold);
-    box-shadow: var(--shadow-md);
-  }
-
-  .header-content {
-    max-width: 1600px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .header-title-box {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-
-  .logo-badge {
-    background: #ffffff;
-    color: var(--primary);
-    font-weight: 900;
-    font-size: 18px;
-    padding: 6px 10px;
-    border-radius: var(--radius-sm);
-    letter-spacing: -0.5px;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .logo-badge img {
-    height: 26px;
-    width: auto;
-    object-fit: contain;
-  }
-
-  h1 {
-    font-size: 19px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  .header-sub {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.75);
-    font-weight: 400;
-    margin-top: 1px;
-  }
-
-  .header-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .pulse-dot {
-    width: 7px;
-    height: 7px;
-    background: #4ade80;
-    border-radius: 50%;
-    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
-    70% { box-shadow: 0 0 0 6px rgba(74, 222, 128, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
-  }
-
   /* Main Container */
   .wrap {
     max-width: 1600px;
@@ -204,27 +119,6 @@
     background: var(--primary-dark);
     color: #ffffff;
     border-color: var(--primary-dark);
-  }
-
-  .btn-archive {
-    background: #0f172a;
-    color: #ffffff;
-    border: 1px solid #0f172a;
-  }
-
-  .btn-archive:hover {
-    background: #1e293b;
-    border-color: #1e293b;
-  }
-
-  .btn-unlock {
-    background: #d97706;
-    color: #ffffff;
-    border: 1px solid #b45309;
-  }
-
-  .btn-unlock:hover {
-    background: #b45309;
   }
 
   .branch-display-wrapper {
@@ -520,23 +414,6 @@
 </head>
 <body>
 
-<header id="app-header">
-  <div class="header-content">
-    <div class="header-title-box">
-      <div class="logo-badge">
-        <img src="logo.png" alt="ML Logo" onerror="this.style.display='none'; this.parentElement.innerText='ML';">
-      </div>
-      <div>
-        <h1>Automated BCTSR Reconciler</h1>
-        <div class="header-sub">Master Reconciliation & Sub-Report Audit Engine</div>
-      </div>
-    </div>
-    <div class="header-tag hide-print">
-      <div class="pulse-dot"></div> Ready
-    </div>
-  </div>
-</header>
-
 <div class="wrap" id="export-container">
   
   <!-- CONTROLS TOOLBAR & BRANCH DISPLAY -->
@@ -550,17 +427,9 @@
       <span>📄</span> Upload Master BCTSR File(s)
     </button>
     <input type="file" id="file-upload" accept=".pdf, .xlsx, .xls, .csv, .html" multiple style="display:none;" onchange="handleFileUpload(event)">
-    
-    <button class="btn-action btn-archive" id="btn-toggle-archive" onclick="toggleArchiveState()">
-      <span>🔒</span> Save / Archive
-    </button>
 
     <button class="btn-action btn-export" onclick="exportToPDF()">
       <span>📥</span> Save as PDF
-    </button>
-
-    <button class="btn-action" id="btn-delete-branch" onclick="deleteActiveBranchData()" title="Delete data for active branch">
-      <span>🗑️</span> Delete Active Branch
     </button>
 
     <button class="btn-action" onclick="resetAllData()" title="Clear all stored branches data">
@@ -674,24 +543,6 @@ function getActiveBranchData() {
     bData.parsedSheetsStore = { PHP: {}, USD: {}, EUR: {}, JPY: {}, GBP: {} };
   }
   return bData;
-}
-
-function toggleArchiveState() {
-  let bData = getActiveBranchData();
-  let currentState = bData.isArchivedStore[activeCurrencyTab] || false;
-  
-  if (!currentState) {
-    if (confirm(`Save & Archive reconciliation for '${activeBranch}' (${activeCurrencyTab})? This will lock data from further editing.`)) {
-      bData.isArchivedStore[activeCurrencyTab] = true;
-    }
-  } else {
-    if (confirm(`Unlock & Edit reconciliation for '${activeBranch}' (${activeCurrencyTab})?`)) {
-      bData.isArchivedStore[activeCurrencyTab] = false;
-    }
-  }
-
-  saveStateToStorage();
-  renderActiveCurrencyData();
 }
 
 function getCurrencySymbol(curr) {
@@ -863,7 +714,7 @@ function sumIntlSendoutCharges(sheetData, targetCurr = "PHP") {
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
     let row = sheetData[i];
     if (isValidDataRow(row) && row.length > ctcCol) {
-      let rowCurr = (currCol !== -1 && row.length > ctcCol) ? String(row[ctcCol] || '').trim().toUpperCase() : targetC;
+      let rowCurr = (currCol !== -1 && row.length > ctcCol) ? String(row[currCol] || '').trim().toUpperCase() : targetC;
       if (!rowCurr) rowCurr = targetC;
       if (rowCurr === 'PESO') rowCurr = 'PHP';
 
@@ -2074,21 +1925,6 @@ function onBranchDropdownChange(newBranch) {
   switchCurrencyTab(activeCurrencyTab);
 }
 
-function deleteActiveBranchData() {
-  if (confirm(`Are you sure you want to delete all saved data for branch '${activeBranch}'?`)) {
-    delete branchesStore[activeBranch];
-    let remainingBranches = Object.keys(branchesStore);
-    if (remainingBranches.length > 0) {
-      activeBranch = remainingBranches[0];
-    } else {
-      activeBranch = "Select Branch";
-    }
-    updateBranchDropdownUI();
-    switchCurrencyTab(activeCurrencyTab);
-    saveStateToStorage();
-  }
-}
-
 function resetAllData() {
   if (confirm("Are you sure you want to reset and clear all uploaded data across ALL branches and currencies?")) {
     ['ml_activeBranch','ml_activeCurrencyTab','ml_branchesStore'].forEach(k => localStorage.removeItem(k));
@@ -2116,38 +1952,13 @@ function switchCurrencyTab(curr) {
 function renderActiveCurrencyData() {
   let bData = getActiveBranchData();
   let data = bData.bctsrDataStore[activeCurrencyTab];
-  let isArchived = bData.isArchivedStore[activeCurrencyTab] || false;
   let currSym = getCurrencySymbol(activeCurrencyTab);
 
-  const archiveBtn = document.getElementById('btn-toggle-archive');
-  const archiveTag = document.getElementById('archive-status-tag');
   const uploadMasterBtn = document.getElementById('btn-upload-master');
   const uploadManualAdjBtn = document.getElementById('btn-upload-manual-adj');
-  const deleteBranchBtn = document.getElementById('btn-delete-branch');
 
   if (uploadMasterBtn) uploadMasterBtn.style.display = 'inline-flex';
-
-  if (isArchived) {
-    archiveBtn.className = "btn-action btn-unlock";
-    archiveBtn.innerHTML = "<span>✏️</span> Edit / Unlock";
-    archiveTag.innerText = "🔒 ARCHIVED / READ-ONLY";
-    archiveTag.style.background = "#fee2e2";
-    archiveTag.style.color = "#991b1b";
-    archiveTag.style.borderColor = "#f87171";
-
-    if (uploadManualAdjBtn) uploadManualAdjBtn.style.display = 'none';
-    if (deleteBranchBtn) deleteBranchBtn.style.display = 'none';
-  } else {
-    archiveBtn.className = "btn-action btn-archive";
-    archiveBtn.innerHTML = "<span>🔒</span> Save / Archive";
-    archiveTag.innerText = "🔓 EDITABLE";
-    archiveTag.style.background = "#f1f5f9";
-    archiveTag.style.color = "#334155";
-    archiveTag.style.borderColor = "#cbd5e1";
-
-    if (uploadManualAdjBtn) uploadManualAdjBtn.style.display = 'inline-flex';
-    if (deleteBranchBtn) deleteBranchBtn.style.display = 'inline-flex';
-  }
+  if (uploadManualAdjBtn) uploadManualAdjBtn.style.display = 'inline-flex';
 
   document.getElementById('th-cashin').innerText = `Cash In (${currSym})`;
   document.getElementById('th-cashout').innerText = `Cash Out (${currSym})`;
@@ -2630,7 +2441,6 @@ function renderManualAdjustmentPivot(groupedData) {
   }
   
   let bData = getActiveBranchData();
-  let isArchived = bData.isArchivedStore[activeCurrencyTab] || false;
 
   keys.forEach((desc, idx) => {
     let data = groupedData[desc];
@@ -2638,16 +2448,14 @@ function renderManualAdjustmentPivot(groupedData) {
     let isBoxOpen = !!bData.openManualAdjRemarksStore[activeCurrencyTab][desc];
 
     let remarkHtml = '';
-    if (!isArchived) {
-      if (isBoxOpen) {
-        remarkHtml = `
-          <div class="remarks-input-wrapper hide-print">
-            <input type="text" class="remarks-input" placeholder="Add Remarks..." value="${currentRemark}" autofocus onblur="handleManualAdjRemarksInput(event, '${desc.replace(/'/g, "\\'")}')" onkeydown="if(event.key==='Enter') this.blur();">
-          </div>
-        `;
-      } else {
-        remarkHtml = `<button class="btn-add-remark hide-print" onclick="toggleManualAdjRemarksBox('${desc.replace(/'/g, "\\'")}')" title="Add Remarks">💬</button>`;
-      }
+    if (isBoxOpen) {
+      remarkHtml = `
+        <div class="remarks-input-wrapper hide-print">
+          <input type="text" class="remarks-input" placeholder="Add Remarks..." value="${currentRemark}" autofocus onblur="handleManualAdjRemarksInput(event, '${desc.replace(/'/g, "\\'")}')" onkeydown="if(event.key==='Enter') this.blur();">
+        </div>
+      `;
+    } else {
+      remarkHtml = `<button class="btn-add-remark hide-print" onclick="toggleManualAdjRemarksBox('${desc.replace(/'/g, "\\'")}')" title="Add Remarks">💬</button>`;
     }
 
     let isNoteVerified = currentRemark.trim().toLowerCase().includes('verified');
@@ -2799,7 +2607,7 @@ function parsePdfLines(pdfRows) {
            if (!numbers[0].includes('.')) {
               qtyDisplay = parseInt(numbers[0]); cashIn = parseNum(numbers[1]); 
            } else {
-              cashIn = parseNum(numbers[0]); cashOut = parseNum(numbers[0]); cashOut = parseNum(numbers[1]);
+              cashIn = parseNum(numbers[0]); cashOut = parseNum(numbers[1]);
            }
         } else if (numbers.length === 1) { cashIn = parseNum(numbers[0]); }
         amount = Math.max(cashIn, cashOut);
@@ -2854,7 +2662,6 @@ function renderReconciliationTable(data) {
 
   let bData = getActiveBranchData();
   let sheetsStore = (bData.parsedSheetsStore && bData.parsedSheetsStore[curr]) ? bData.parsedSheetsStore[curr] : {};
-  let isArchived = bData.isArchivedStore[activeCurrencyTab] || false;
 
   let manualInputs = bData.manualInputsStore[activeCurrencyTab] || {};
   let manualRemarks = bData.manualRemarksStore[activeCurrencyTab] || {};
@@ -2939,16 +2746,14 @@ function renderReconciliationTable(data) {
     let isBoxOpen = !!openRemarksInput[itemKey];
     let remarkHtml = '';
 
-    if (!isArchived) {
-      if (isBoxOpen) {
-        remarkHtml = `
-          <div class="remarks-input-wrapper hide-print">
-            <input type="text" class="remarks-input" placeholder="Add Remarks..." value="${currentRemark}" autofocus onblur="handleRemarksInput(event, '${itemKey.replace(/'/g, "\\'")}')" onkeydown="if(event.key==='Enter') this.blur();">
-          </div>
-        `;
-      } else {
-        remarkHtml = `<button class="btn-add-remark hide-print" onclick="toggleRemarksBox('${itemKey.replace(/'/g, "\\'")}')" title="Add Remarks">💬</button>`;
-      }
+    if (isBoxOpen) {
+      remarkHtml = `
+        <div class="remarks-input-wrapper hide-print">
+          <input type="text" class="remarks-input" placeholder="Add Remarks..." value="${currentRemark}" autofocus onblur="handleRemarksInput(event, '${itemKey.replace(/'/g, "\\'")}')" onkeydown="if(event.key==='Enter') this.blur();">
+        </div>
+      `;
+    } else {
+      remarkHtml = `<button class="btn-add-remark hide-print" onclick="toggleRemarksBox('${itemKey.replace(/'/g, "\\'")}')" title="Add Remarks">💬</button>`;
     }
 
     let actionCellHtml = '';
@@ -2959,19 +2764,19 @@ function renderReconciliationTable(data) {
       actionCellHtml = `
         <div class="action-cell-flex">
           <div>${statusHtml}</div>
-          ${!isArchived ? `<div class="manual-input-wrapper hide-print">
+          <div class="manual-input-wrapper hide-print">
             <input type="text" class="manual-input" placeholder="Type Amount" value="${currentVal}" onblur="handleManualInput(event, '${itemKey.replace(/'/g, "\\'")}')" onkeydown="if(event.key==='Enter') this.blur();">
-          </div>` : `<span class="num-cell" style="font-size:12px;">${formatMoney(parseNum(currentVal), currSym)}</span>`}
+          </div>
           <div>${remarkHtml}</div>
         </div>
       `;
     } else {
-      let removeBtnHtml = (hasSubReport && !isArchived) ? `<button class="btn-remove-sub hide-print" onclick="removeSubReport('${itemKey.replace(/'/g, "\\'")}')" title="Remove Sub-Report Data">🗑️</button>` : '';
-      let uploadBtnHtml = !isArchived ? `
+      let removeBtnHtml = hasSubReport ? `<button class="btn-remove-sub hide-print" onclick="removeSubReport('${itemKey.replace(/'/g, "\\'")}')" title="Remove Sub-Report Data">🗑️</button>` : '';
+      let uploadBtnHtml = `
         <div class="sub-upload-wrapper hide-print">
           <button class="btn-upload-sub" onclick="document.getElementById('sub-file-${idx}').click()" title="Upload Report">📤</button>
           <input type="file" id="sub-file-${idx}" accept=".xlsx, .xls, .csv, .html, .pdf" multiple style="display:none;" onchange="handleSubReportUpload(event, '${itemKey.replace(/'/g, "\\'")}')">
-        </div>` : '';
+        </div>`;
 
       actionCellHtml = `
         <div class="action-cell-flex">
