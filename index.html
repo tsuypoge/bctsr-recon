@@ -500,7 +500,7 @@
   <div id="manual-adj-section" style="margin-top: 40px; padding-top: 24px; border-top: 2px dashed #cbd5e1;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
       <div>
-        <h2 class="section-header-title">Manual Adjustment Summary (<span id="manual-adj-curr-title">PHP</span>)</h2>
+        <h2 class="section-header-title">Manual adjustment Summary (<span id="manual-adj-curr-title">PHP</span>)</h2>
         <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Upload the Manual Adjustment Report. Rows automatically aggregate into their designated currency tab.</div>
       </div>
       
@@ -1673,7 +1673,7 @@ const REPORT_RULES = {
   "POS Telco Products": { sheet: "BRANCH-ELOAD", getSum: (data) => sumCol(data, 8), getQty: (data) => countRows(data) },
 
   "MCash Cash In": { sheet: "MCASH IN", altSheet: "MCASH", getSum: (data) => sumMCashCashIn(data), getQty: (data) => countMCashCashIn(data) },
-  "MCash Service Charge": { sheet: "MCASH IN", altSheet: "MCASH", getSum: (data) => sumMCashServiceCharge(data), getQty: (data) => countMCashCashIn(data) },
+  "MCash Service Charge": { sheet: "MCASH IN", altSheet: "MCASH", getSum: (data) => sumMCashServiceCharge(data), getQty: (data) => countMCashServiceCharge(data) },
   "MCash Payout": { sheet: "MCASH OUT", getSum: (data) => sumMCashPayout(data), getQty: (data) => countMCashPayout(data) },
 
   "ATM POS": { isManual: true },
@@ -2049,7 +2049,7 @@ function exportToPDF() {
 
       manualAdjExportHtml = `
       <div style="margin-top:30px;">
-          <h3 style="font-size:15px; color:#a3241c; margin-bottom:10px; border-bottom: 2px solid #d4af37; padding-bottom: 4px;">Manual Adjustment Summary (${activeCurrencyTab})</h3>${clonedAdjContainer.outerHTML}
+          <h3 style="font-size:15px; color:#a3241c; margin-bottom:10px; border-bottom: 2px solid #d4af37; padding-bottom: 4px;">Manual adjustment Summary (${activeCurrencyTab})</h3>${clonedAdjContainer.outerHTML}
       </div>`;
   }
 
@@ -2059,8 +2059,8 @@ function exportToPDF() {
   element.innerHTML = `
     <div style="font-family: var(--font-sans); color:#1f2937;">
       <div style="background: #7a1212; color: #fff; padding: 16px 24px; border-bottom: 4px solid #d4af37; margin-bottom: 20px; border-radius: 8px;">
-        <h2 style="margin:0; font-size:18px;">M LHUILLIER — BCTSR RECONCILIATION SUMMARY REPORT (${activeCurrencyTab})</h2>
-        <div style="font-size:12px; opacity:0.8;">Generated automatically via Automated BCTSR Reconciler</div>
+        <h2 style="margin:0; font-size:18px;">BCTSR RECONCILIATION SUMMARY REPORT FROM M LHUILLIER (${activeCurrencyTab})</h2>
+        <div style="font-size:12px; opacity:0.8;">Generated automatically via BCTSR Reconciler</div>
       </div>
       ${document.getElementById('summary-bar').outerHTML}
       <div style="margin-top:20px;">
