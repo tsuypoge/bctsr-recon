@@ -2252,7 +2252,7 @@ function parsePdfRowsPromise(file) {
   });
 }
 
-// SUB-REPORT UPLOAD LOGIC
+// SUB-REPORT UPLOAD LOGIC (ISOLATED TO ACTIVE CURRENCY TAB ONLY)
 async function handleSubReportUpload(evt, itemKey) {
   const files = Array.from(evt.target.files);
   if (!files || files.length === 0) return;
@@ -2261,7 +2261,6 @@ async function handleSubReportUpload(evt, itemKey) {
   let defaultSheetTarget = rule ? rule.sheet : itemKey;
   
   let bData = getActiveBranchData();
-  let currencies = ['PHP', 'USD', 'EUR', 'JPY', 'GBP'];
 
   for (let file of files) {
     const fileName = file.name.toLowerCase();
@@ -2276,15 +2275,14 @@ async function handleSubReportUpload(evt, itemKey) {
     if (newSheetData && newSheetData.length > 0) {
       let sheetTarget = detectSheetType(newSheetData, defaultSheetTarget);
 
-      currencies.forEach(c => {
-        if (!bData.parsedSheetsStore[c]) {
-          bData.parsedSheetsStore[c] = {};
-        }
-        if (!bData.parsedSheetsStore[c][sheetTarget]) {
-          bData.parsedSheetsStore[c][sheetTarget] = [];
-        }
-        bData.parsedSheetsStore[c][sheetTarget] = bData.parsedSheetsStore[c][sheetTarget].concat(newSheetData);
-      });
+      if (!bData.parsedSheetsStore[activeCurrencyTab]) {
+        bData.parsedSheetsStore[activeCurrencyTab] = {};
+      }
+      if (!bData.parsedSheetsStore[activeCurrencyTab][sheetTarget]) {
+        bData.parsedSheetsStore[activeCurrencyTab][sheetTarget] = [];
+      }
+      bData.parsedSheetsStore[activeCurrencyTab][sheetTarget] = 
+        bData.parsedSheetsStore[activeCurrencyTab][sheetTarget].concat(newSheetData);
     }
   }
 
@@ -2293,21 +2291,18 @@ async function handleSubReportUpload(evt, itemKey) {
   evt.target.value = '';
 }
 
-// SUB-REPORT REMOVAL (CLEARS ACROSS CURRENCIES)
+// SUB-REPORT REMOVAL (CLEARS FOR ACTIVE CURRENCY TAB ONLY)
 function removeSubReport(itemKey) {
   let rule = REPORT_RULES[itemKey] || REPORT_RULES[itemKey.split('_')[0]];
   let sheetTarget = rule ? rule.sheet : itemKey;
-  if (confirm(`Are you sure you want to remove the uploaded report?`)) {
+  if (confirm(`Are you sure you want to remove the uploaded report for ${activeCurrencyTab}?`)) {
     let bData = getActiveBranchData();
-    let currencies = ['PHP', 'USD', 'EUR', 'JPY', 'GBP'];
-    currencies.forEach(c => {
-      if (bData.parsedSheetsStore[c]) {
-        delete bData.parsedSheetsStore[c][sheetTarget];
-        if (rule && rule.altSheet) {
-          delete bData.parsedSheetsStore[c][rule.altSheet];
-        }
+    if (bData.parsedSheetsStore[activeCurrencyTab]) {
+      delete bData.parsedSheetsStore[activeCurrencyTab][sheetTarget];
+      if (rule && rule.altSheet) {
+        delete bData.parsedSheetsStore[activeCurrencyTab][rule.altSheet];
       }
-    });
+    }
     saveStateToStorage();
     renderActiveCurrencyData();
   }
@@ -2695,12 +2690,13 @@ function renderReconciliationTable(data) {
         reportTotal = manualInputs[itemKey] !== undefined ? manualInputs[itemKey] : null;
       } else {
         matchedSheet = rule.sheet;
-        let activeSheet = sheetsStore[rule.sheet] || 
-                          sheetsStore[rule.altSheet] || 
-                          sheetsStore["BP"] || 
-                          sheetsStore["BILLS PAYMENT"] || 
-                          sheetsStore["BILLSPAYMENT"] ||
-                          sheetsStore["BPI VYBE"];
+        
+        let activeSheet = null;
+        if (rule.sheet && sheetsStore[rule.sheet]) {
+          activeSheet = sheetsStore[rule.sheet];
+        } else if (rule.altSheet && sheetsStore[rule.altSheet]) {
+          activeSheet = sheetsStore[rule.altSheet];
+        }
         
         if (item.particular === "Fund Transfer Given to BC/HO") {
           let b2bSheet = sheetsStore["B2B"] || sheetsStore["B2B PHP"];
