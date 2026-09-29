@@ -536,6 +536,19 @@ let activeBranch = "Select Branch";
 let activeCurrencyTab = 'PHP';
 let branchesStore = {}; 
 
+// STRICT CASHOUT PARTICULARS REGEX LIST
+const CASHOUT_PARTICULAR_PATTERNS = [
+  "prenda", "payout", "given", "payment solutions", "mcash payout", 
+  "cash out", "expenses"
+];
+
+function isStrictCashOutParticular(particularStr) {
+  if (!particularStr) return false;
+  let p = particularStr.toLowerCase().trim();
+  if (p.includes("sendout") || p.includes("cash in")) return false;
+  return CASHOUT_PARTICULAR_PATTERNS.some(pat => p.includes(pat));
+}
+
 function createEmptyBranchStore() {
   return {
     bctsrDataStore: { PHP: null, USD: null, EUR: null, JPY: null, GBP: null },
@@ -2575,11 +2588,19 @@ function extractDataFromRows(rows) {
     let valIn = parseNum(row[3]);
     let valOut = parseNum(row[4]);
 
-    // AUTO-CORRECT CASH OUT PARTICULARS (Map Payout/Disbursement Particulars to Cash Out)
-    let isPayoutParticular = /payout|prenda|given|out|solutions/i.test(particular);
-    if (isPayoutParticular && valIn > 0 && valOut === 0) {
-      valOut = valIn;
-      valIn = 0;
+    // STRICT CHECK FOR CASHOUT PARTICULARS
+    let isCashOutItem = isStrictCashOutParticular(particular);
+
+    if (isCashOutItem) {
+      if (valIn > 0 && valOut === 0) {
+        valOut = valIn;
+        valIn = 0;
+      }
+    } else {
+      if (valOut > 0 && valIn === 0) {
+        valIn = valOut;
+        valOut = 0;
+      }
     }
 
     let amount = Math.max(valIn, valOut);
@@ -2624,26 +2645,50 @@ function parsePdfLines(pdfRows) {
       if (particular && !particular.includes("Ending Balance") && !particular.includes("Beginning Balance") && !particular.includes("Particulars") && !particular.startsWith("•") && !particular.toLowerCase().includes("accumulated cash shortage") && !particular.toLowerCase().includes("resource")) {
         let qtyDisplay = '—';
         let amount = 0, cashIn = 0, cashOut = 0;
+
+        let isCashOutItem = isStrictCashOutParticular(particular);
+
         if (numbers.length >= 3) {
-           qtyDisplay = parseInt(numbers[0]); cashIn = parseNum(numbers[1]); cashOut = parseNum(numbers[2]);
+           qtyDisplay = parseInt(numbers[0]); 
+           let num1 = parseNum(numbers[1]);
+           let num2 = parseNum(numbers[2]);
+           if (isCashOutItem) {
+             cashOut = Math.max(num1, num2);
+             cashIn = 0;
+           } else {
+             cashIn = Math.max(num1, num2);
+             cashOut = 0;
+           }
         } else if (numbers.length === 2) {
            if (!numbers[0].includes('.')) {
               qtyDisplay = parseInt(numbers[0]); 
               let val = parseNum(numbers[1]);
-              if (/payout|prenda|given|out|solutions/i.test(particular)) {
+              if (isCashOutItem) {
                 cashOut = val;
+                cashIn = 0;
               } else {
                 cashIn = val;
+                cashOut = 0;
               }
            } else {
-              cashIn = parseNum(numbers[0]); cashOut = parseNum(numbers[1]);
+              let num1 = parseNum(numbers[0]);
+              let num2 = parseNum(numbers[1]);
+              if (isCashOutItem) {
+                cashOut = Math.max(num1, num2);
+                cashIn = 0;
+              } else {
+                cashIn = Math.max(num1, num2);
+                cashOut = 0;
+              }
            }
         } else if (numbers.length === 1) { 
           let val = parseNum(numbers[0]); 
-          if (/payout|prenda|given|out|solutions/i.test(particular)) {
+          if (isCashOutItem) {
             cashOut = val;
+            cashIn = 0;
           } else {
             cashIn = val;
+            cashOut = 0;
           }
         }
         
