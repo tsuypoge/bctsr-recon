@@ -2571,8 +2571,17 @@ function extractDataFromRows(rows) {
 
     let qtyVal = row[2];
     let qtyDisplay = (qtyVal !== '' && qtyVal !== null && qtyVal !== undefined && !isNaN(qtyVal)) ? parseInt(qtyVal) : '—';
+    
     let valIn = parseNum(row[3]);
     let valOut = parseNum(row[4]);
+
+    // AUTO-CORRECT CASH OUT PARTICULARS (Map Payout/Disbursement Particulars to Cash Out)
+    let isPayoutParticular = /payout|prenda|given|out|solutions/i.test(particular);
+    if (isPayoutParticular && valIn > 0 && valOut === 0) {
+      valOut = valIn;
+      valIn = 0;
+    }
+
     let amount = Math.max(valIn, valOut);
 
     if (amount > 0 && !particular.includes('Ending Balance') && !particular.includes('Beginning Balance')) {
@@ -2619,11 +2628,25 @@ function parsePdfLines(pdfRows) {
            qtyDisplay = parseInt(numbers[0]); cashIn = parseNum(numbers[1]); cashOut = parseNum(numbers[2]);
         } else if (numbers.length === 2) {
            if (!numbers[0].includes('.')) {
-              qtyDisplay = parseInt(numbers[0]); cashIn = parseNum(numbers[1]); 
+              qtyDisplay = parseInt(numbers[0]); 
+              let val = parseNum(numbers[1]);
+              if (/payout|prenda|given|out|solutions/i.test(particular)) {
+                cashOut = val;
+              } else {
+                cashIn = val;
+              }
            } else {
               cashIn = parseNum(numbers[0]); cashOut = parseNum(numbers[1]);
            }
-        } else if (numbers.length === 1) { cashIn = parseNum(numbers[0]); }
+        } else if (numbers.length === 1) { 
+          let val = parseNum(numbers[0]); 
+          if (/payout|prenda|given|out|solutions/i.test(particular)) {
+            cashOut = val;
+          } else {
+            cashIn = val;
+          }
+        }
+        
         amount = Math.max(cashIn, cashOut);
         if (amount > 0) items.push({ category: currentCategory, particular, qty: qtyDisplay, cashIn, cashOut, amount });
       }
