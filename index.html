@@ -545,7 +545,7 @@ const CASHOUT_PARTICULAR_PATTERNS = [
 function isStrictCashOutParticular(particularStr) {
   if (!particularStr) return false;
   let p = particularStr.toLowerCase().trim();
-  if (p.includes("sendout") || p.includes("cash in")) return false;
+  if (p.includes("sendout") || p.includes("cash in") || p.includes("interest")) return false;
   return CASHOUT_PARTICULAR_PATTERNS.some(pat => p.includes(pat));
 }
 
@@ -1655,7 +1655,7 @@ const REPORT_RULES = {
   "KP Domestic Payout": { sheet: "KPPO", getSum: (data) => sumKPPOAmount(data), getQty: (data) => countKPPOQty(data) },
 
   "Bills Payment Principal": { sheet: "BP", altSheet: "BILLS PAYMENT", getSum: (data) => sumBPPrincipal(data), getQty: (data) => countBPRows(data) },
-  "Bills Payment Charges": { sheet: "BP", altSheet: "BILLS PAYMENT", getSum: (data) => sumBPCharges(data), getQty: (data) => countBPRows(data) },
+  "Bills Payment Charges": { sheet: "BP", altSheet: "BILLS PAYMENT", getSum: (data) => sumBPCharges(data), getQty: (data) => countBPCharges(data) },
 
   "BPI Vybe": { sheet: "BPI VYBE", getSum: (data) => sumBPIVybe(data), getQty: (data) => countBPIVybe(data) },
   "BPI Vybe Sendout": { sheet: "BPI VYBE", getSum: (data) => sumBPIVybe(data), getQty: (data) => countBPIVybe(data) },
@@ -2597,7 +2597,7 @@ function extractDataFromRows(rows) {
         valIn = 0;
       }
     } else {
-      if (valOut > 0 && valIn === 0) {
+      if (valOut > 0 && valIn === 0 && !particular.toLowerCase().includes("interest") && !particular.toLowerCase().includes("charges")) {
         valIn = valOut;
         valOut = 0;
       }
@@ -2650,15 +2650,8 @@ function parsePdfLines(pdfRows) {
 
         if (numbers.length >= 3) {
            qtyDisplay = parseInt(numbers[0]); 
-           let num1 = parseNum(numbers[1]);
-           let num2 = parseNum(numbers[2]);
-           if (isCashOutItem) {
-             cashOut = Math.max(num1, num2);
-             cashIn = 0;
-           } else {
-             cashIn = Math.max(num1, num2);
-             cashOut = 0;
-           }
+           cashIn = parseNum(numbers[1]);
+           cashOut = parseNum(numbers[2]);
         } else if (numbers.length === 2) {
            if (!numbers[0].includes('.')) {
               qtyDisplay = parseInt(numbers[0]); 
@@ -2671,15 +2664,8 @@ function parsePdfLines(pdfRows) {
                 cashOut = 0;
               }
            } else {
-              let num1 = parseNum(numbers[0]);
-              let num2 = parseNum(numbers[1]);
-              if (isCashOutItem) {
-                cashOut = Math.max(num1, num2);
-                cashIn = 0;
-              } else {
-                cashIn = Math.max(num1, num2);
-                cashOut = 0;
-              }
+              cashIn = parseNum(numbers[0]);
+              cashOut = parseNum(numbers[1]);
            }
         } else if (numbers.length === 1) { 
           let val = parseNum(numbers[0]); 
