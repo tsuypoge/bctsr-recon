@@ -549,6 +549,12 @@ function isStrictCashOutParticular(particularStr) {
   return CASHOUT_PARTICULAR_PATTERNS.some(pat => p.includes(pat));
 }
 
+function parseNum(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  let n = parseFloat(String(val).replace(/,/g, '').trim());
+  return isNaN(n) ? 0 : n;
+}
+
 function createEmptyBranchStore() {
   return {
     bctsrDataStore: { PHP: null, USD: null, EUR: null, JPY: null, GBP: null },
@@ -1903,12 +1909,6 @@ function isBranchMatch(rowBranch, headerBranch) {
     return true;
   }
   return false;
-}
-
-function parseNum(val) {
-  if (!val && val !== 0) return 0;
-  let n = parseFloat(String(val).replace(/,/g, '').trim());
-  return isNaN(n) ? 0 : n;
 }
 
 function formatMoney(val, symbol = '') {
