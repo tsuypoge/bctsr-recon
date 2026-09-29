@@ -407,7 +407,6 @@
   }
 
   .recon-details { font-size: 10.5px; color: #94a3b8; font-family: var(--font-mono); display: inline-block; }
-  .section-tag { font-size: 9.5px; background: #e2e8f0; color: #334155; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-right: 4px; text-transform: uppercase; }
 
   .inner-table { width: 100%; border-collapse: collapse; font-size: 11px; background: #ffffff; margin-top: 4px; border: 1px solid #cbd5e1; }
   .inner-table th { background: #f1f5f9; padding: 6px 10px; font-size: 9.5px; color: #475569; border-bottom: 1px solid #cbd5e1; }
@@ -2815,7 +2814,6 @@ function renderReconciliationTable(data) {
     tr.innerHTML = `
       <td>
         <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-          <span class="section-tag">${item.category}</span>
           <span style="font-weight:600;">${item.particular}</span>
           <span class="recon-details">| Source: ${matchedSheet}</span>
         </div>
