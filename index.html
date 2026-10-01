@@ -637,7 +637,7 @@ function sumBPIVybe(sheetData) {
     if (amtCol !== -1) break;
   }
 
-  if (amtCol === -1) amtCol = 11;
+  if (amtCol === -1) amtCol = 11; // Fallback to Column L (Index 11) for Amount
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
@@ -801,6 +801,7 @@ function countIntlSendout(sheetData, targetCurr = "PHP") {
   return count;
 }
 
+// DYNAMIC BILLS PAYMENT CALCULATORS
 function sumBPPrincipal(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amtCol = -1, headerIdx = -1;
@@ -819,7 +820,7 @@ function sumBPPrincipal(sheetData) {
     if (amtCol !== -1) break;
   }
 
-  if (amtCol === -1) amtCol = 9;
+  if (amtCol === -1) amtCol = 9; // Fallback: Column J (Amount Paid)
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
@@ -851,7 +852,7 @@ function sumBPCharges(sheetData) {
     if (chargeCol !== -1) break;
   }
 
-  if (chargeCol === -1) chargeCol = 10;
+  if (chargeCol === -1) chargeCol = 10; // Fallback: Column K (Charge)
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
@@ -896,6 +897,7 @@ function countBPRows(sheetData) {
   return count > 0 ? count : countRows(sheetData);
 }
 
+// MCASH CASH IN & SERVICE CHARGE CALCULATORS
 function sumMCashCashIn(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amountCol = -1, headerIdx = -1;
@@ -984,6 +986,7 @@ function countMCashCashIn(sheetData) {
   return count;
 }
 
+// JEWELRY SALES CALCULATORS (WITH BRANCH FILTERING)
 function sumJewelryNetSales(sheetData, branchName) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
 
@@ -1142,6 +1145,7 @@ function countJewelrySales(sheetData, branchName) {
   return countRows(sheetData);
 }
 
+// POS INSURANCE SALES CALCULATORS
 function sumInsuranceSales(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let total = 0;
@@ -1202,6 +1206,7 @@ function countInsuranceSales(sheetData) {
   return count;
 }
 
+// KPPO CALCULATORS
 function sumKPPOAmount(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amountCol = -1, headerIdx = -1;
@@ -1270,6 +1275,7 @@ function countKPPOQty(sheetData) {
   return qty;
 }
 
+// MLG PO CALCULATORS (STRICTLY READS COLUMN N = INDEX 13 FOR CURRENCY & COLUMN P = INDEX 15 FOR PO AMOUNT)
 function sumMLGPO(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let totalAmt = 0;
@@ -1316,6 +1322,7 @@ function countMLGPO(sheetData) {
   return count;
 }
 
+// B2FD CALCULATORS
 function sumB2FD(sheetData, branchName, targetCurr = "PHP") {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let total = 0;
@@ -1454,6 +1461,7 @@ function countB2FD(sheetData, branchName, targetCurr = "PHP") {
   return count;
 }
 
+// ROBUST B2B CALCULATORS
 function sumB2B(sheetData, keyword, targetCurr = "PHP") {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let searchKey = keyword.toLowerCase().trim();
@@ -1696,7 +1704,9 @@ const REPORT_RULES = {
   "Other Income": { isRemarks: true },
   "Transactions For Verification": { isRemarks: true },
   "Adjustment +(-)": { isRemarks: true },
-  "Overage": { isRemarks: true }
+  "Overage": { isRemarks: true },
+  "Current Day Cash Shortage": { isRemarks: true },
+  "Resource": { isRemarks: true }
 };
 
 function isValidDataRow(row) {
@@ -2736,7 +2746,12 @@ function renderReconciliationTable(data) {
     let itemKey = item.particular;
     let rule = REPORT_RULES[item.particular];
 
-    if (item.category === "Non-Cash" && item.particular !== "Renewal Anywhere Process") {
+    // CHECK FOR REMARKS-ONLY ITEMS INCLUDING SHORTAGE & RESOURCE
+    let isRemarksOnly = (item.category === "Non-Cash" && item.particular !== "Renewal Anywhere Process") ||
+                        item.particular.toLowerCase().includes("current day cash shortage") ||
+                        item.particular.toLowerCase().includes("resource");
+
+    if (isRemarksOnly) {
       rule = { isRemarks: true };
     }
 
