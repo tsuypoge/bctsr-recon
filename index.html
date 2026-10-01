@@ -65,14 +65,12 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Main Container */
   .wrap {
     max-width: 1600px;
     margin: 24px auto;
     padding: 0 24px;
   }
 
-  /* Upload & Action Controls Bar */
   .upload-action-bar {
     display: flex;
     gap: 10px;
@@ -152,7 +150,6 @@
     white-space: nowrap;
   }
 
-  /* Currency Tabs */
   .currency-tabs-bar {
     display: flex;
     gap: 6px;
@@ -187,7 +184,6 @@
     color: var(--text-main);
   }
 
-  /* Summary Dashboard Metrics */
   .summary-bar {
     background: var(--panel-bg);
     border: 1px solid var(--border);
@@ -249,7 +245,6 @@
     font-weight: 800;
   }
 
-  /* Modernized Tables */
   .table-container {
     background: var(--panel-bg);
     border-radius: var(--radius-lg);
@@ -336,7 +331,6 @@
 
   .status-badge.pending { background: #f1f5f9; color: var(--text-muted); border: 1px solid #e2e8f0; }
 
-  /* STRICT SIDE-BY-SIDE FLEX CONTAINER FOR ACTION CELL */
   .action-cell-flex {
     display: flex;
     align-items: center;
@@ -345,7 +339,6 @@
     flex-wrap: nowrap;
   }
 
-  /* COMPACT ICON-ONLY CIRCULAR BUTTONS */
   .btn-upload-sub, .btn-remove-sub, .btn-add-remark {
     font-size: 11px;
     font-family: var(--font-sans);
@@ -495,6 +488,26 @@
     </table>
   </div>
 
+  <!-- ACCUMULATED CASH SHORTAGE ISOLATED SECTION -->
+  <div id="accumulated-shortage-section" style="margin-top: 30px; display: none;">
+    <h2 class="section-header-title">Accumulated Cash Shortage</h2>
+    <div class="table-container" style="margin-top: 12px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Resource</th>
+            <th style="text-align:right;">Cash-on-Hand (For return to vault)</th>
+            <th style="text-align:right;">Cash Given to Vault</th>
+            <th style="text-align:right;">Cash Shortage</th>
+          </tr>
+        </thead>
+        <tbody id="shortage-body">
+          <!-- Dynamic Shortage Rows -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- MANUAL ADJUSTMENT PIVOT SECTION -->
   <div id="manual-adj-section" style="margin-top: 40px; padding-top: 24px; border-top: 2px dashed #cbd5e1;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -536,10 +549,9 @@ let activeBranch = "Select Branch";
 let activeCurrencyTab = 'PHP';
 let branchesStore = {}; 
 
-// STRICT CASHOUT PARTICULARS REGEX LIST
 const CASHOUT_PARTICULAR_PATTERNS = [
   "prenda", "payout", "given", "payment solutions", "mcash payout", 
-  "cash out", "expenses"
+  "cash out", "expenses", "online payments", "qcl renewal thru e-wallet"
 ];
 
 function isStrictCashOutParticular(particularStr) {
@@ -594,7 +606,6 @@ function getCurrencySymbol(curr) {
   }
 }
 
-// AUTOMATIC SHEET TYPE DETECTOR (B2B vs B2FD vs BP vs BPI VYBE)
 function detectSheetType(rows, defaultTarget) {
   if (!rows || !Array.isArray(rows) || rows.length === 0) return defaultTarget;
   
@@ -618,7 +629,6 @@ function detectSheetType(rows, defaultTarget) {
   return defaultTarget;
 }
 
-// BPI VYBE CALCULATORS
 function sumBPIVybe(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amtCol = -1, headerIdx = -1;
@@ -681,7 +691,6 @@ function countBPIVybe(sheetData) {
   return count > 0 ? count : countRows(sheetData);
 }
 
-// INTL MONEY TRANSFER SENDOUT & CHARGES CALCULATORS
 function sumIntlSendoutPrincipal(sheetData, targetCurr = "PHP") {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let principalCol = -1, currCol = -1, headerIdx = -1;
@@ -801,7 +810,6 @@ function countIntlSendout(sheetData, targetCurr = "PHP") {
   return count;
 }
 
-// DYNAMIC BILLS PAYMENT CALCULATORS
 function sumBPPrincipal(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amtCol = -1, headerIdx = -1;
@@ -897,7 +905,6 @@ function countBPRows(sheetData) {
   return count > 0 ? count : countRows(sheetData);
 }
 
-// MCASH CASH IN & SERVICE CHARGE CALCULATORS
 function sumMCashCashIn(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amountCol = -1, headerIdx = -1;
@@ -986,7 +993,6 @@ function countMCashCashIn(sheetData) {
   return count;
 }
 
-// JEWELRY SALES CALCULATORS (WITH BRANCH FILTERING)
 function sumJewelryNetSales(sheetData, branchName) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
 
@@ -1145,7 +1151,6 @@ function countJewelrySales(sheetData, branchName) {
   return countRows(sheetData);
 }
 
-// POS INSURANCE SALES CALCULATORS
 function sumInsuranceSales(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let total = 0;
@@ -1206,7 +1211,6 @@ function countInsuranceSales(sheetData) {
   return count;
 }
 
-// KPPO CALCULATORS
 function sumKPPOAmount(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amountCol = -1, headerIdx = -1;
@@ -1589,6 +1593,7 @@ function countB2B(sheetData, keyword, targetCurr = "PHP") {
   return count;
 }
 
+// UPDATED REPORT RULES: ONLINE PAYMENTS IS NOW REMARKS-ONLY
 const REPORT_RULES = {
   "Fund Transfer Received From BC": { sheet: "B2B", altSheet: "B2B PHP", getSum: (data, br, items, curr) => sumB2B(data, "Total Received :", curr), getQty: (data, br, items, curr) => countB2B(data, "Total Received :", curr) },
   "Fund Transfer Given to BC": { sheet: "B2B", altSheet: "B2B PHP", getSum: (data, br, items, curr) => sumB2B(data, "Total Given :", curr), getQty: (data, br, items, curr) => countB2B(data, "Total Given :", curr) },
@@ -1657,8 +1662,8 @@ const REPORT_RULES = {
   "BPI Vybe": { sheet: "BPI VYBE", getSum: (data) => sumBPIVybe(data), getQty: (data) => countBPIVybe(data) },
   "BPI Vybe Sendout": { sheet: "BPI VYBE", getSum: (data) => sumBPIVybe(data), getQty: (data) => countBPIVybe(data) },
 
-  "Online Payments": { sheet: "ONLINE PAYMENTS", altSheet: "E-PAYMENTS", getSum: (data) => sumCol(data, 3), getQty: (data) => countRows(data) },
-  "QCL Renewal thru E-Wallet": { sheet: "E-WALLET", altSheet: "EWALLET", getSum: (data) => sumCol(data, 3), getQty: (data) => countRows(data) },
+  "Online Payments": { isRemarks: true },
+  "QCL Renewal thru E-Wallet": { isRemarks: true },
 
   "Remit to Account": { sheet: "QRPH", getSum: (data) => sumCol(data, 11), getQty: (data) => countRows(data) },
   "Remit to Account Charges": { sheet: "QRPH", getSum: (data) => sumCol(data, 10), getQty: (data) => countRows(data) },
@@ -1954,11 +1959,6 @@ function updateBranchDropdownUI() {
   }
 }
 
-function onBranchDropdownChange(newBranch) {
-  activeBranch = newBranch;
-  switchCurrencyTab(activeCurrencyTab);
-}
-
 function resetAllData() {
   if (confirm("Are you sure you want to reset and clear all stored reconciliation data across ALL branches and currencies?")) {
     ['ml_activeBranch','ml_activeCurrencyTab','ml_branchesStore'].forEach(k => localStorage.removeItem(k));
@@ -2003,9 +2003,11 @@ function renderActiveCurrencyData() {
 
   if (data) {
     renderReconciliationTable(data);
+    renderAccumulatedShortageTable(data.accumulatedShortages || []);
   } else {
     document.getElementById('summary-bar').style.display = 'none';
     document.getElementById('recon-body').innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">No BCTSR file uploaded for branch '${activeBranch}' on the${activeCurrencyTab} tab yet. Please click 'Upload BCTSR File(s)' above.</td></tr>`;
+    renderAccumulatedShortageTable([]);
   }
 
   let adjData = bData.manualAdjDataStore[activeCurrencyTab];
@@ -2014,6 +2016,33 @@ function renderActiveCurrencyData() {
   } else {
     document.getElementById('manual-adj-body').innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">No Manual Adjustment file uploaded for this currency.</td></tr>`;
   }
+}
+
+function renderAccumulatedShortageTable(shortageList) {
+  const container = document.getElementById('accumulated-shortage-section');
+  const tbody = document.getElementById('shortage-body');
+  let currSym = getCurrencySymbol(activeCurrencyTab);
+
+  if (!shortageList || shortageList.length === 0) {
+    container.style.display = 'none';
+    tbody.innerHTML = '';
+    return;
+  }
+
+  container.style.display = 'block';
+  tbody.innerHTML = '';
+
+  shortageList.forEach(item => {
+    let tr = document.createElement('tr');
+    tr.className = "hoverable";
+    tr.innerHTML = `
+      <td style="font-weight:700; color:var(--text-main);">${item.resource}</td>
+      <td class="num-cell">${formatMoney(item.coh, currSym)}</td>
+      <td class="num-cell">${formatMoney(item.givenVault, currSym)}</td>
+      <td class="num-cell" style="color:var(--mismatch);">${formatMoney(item.shortage, currSym)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 function exportToPDF() {
@@ -2052,6 +2081,13 @@ function exportToPDF() {
 
   const branchName = document.getElementById('val-branch').innerText.replace(/[^a-zA-Z0-9]/g, '_');
   
+  let shortageExportHtml = '';
+  if (data.accumulatedShortages && data.accumulatedShortages.length > 0) {
+      let clonedShortageContainer = document.getElementById('accumulated-shortage-section').cloneNode(true);
+      clonedShortageContainer.style.display = 'block';
+      shortageExportHtml = `<div style="margin-top:24px;">${clonedShortageContainer.outerHTML}</div>`;
+  }
+
   let manualAdjExportHtml = '';
   let adjData = bData.manualAdjDataStore[activeCurrencyTab];
   if (adjData && Object.keys(adjData).length > 0) {
@@ -2080,7 +2116,7 @@ function exportToPDF() {
       <div style="margin-top:20px;">
         ${document.getElementById('main-recon-container').outerHTML}
       </div>
-      ${manualAdjExportHtml}
+      ${shortageExportHtml}${manualAdjExportHtml}
     </div>
   `;
 
@@ -2286,7 +2322,6 @@ function parsePdfRowsPromise(file) {
   });
 }
 
-// REPORT UPLOAD LOGIC
 async function handleSubReportUpload(evt, itemKey) {
   const files = Array.from(evt.target.files);
   if (!files || files.length === 0) return;
@@ -2538,16 +2573,16 @@ function renderManualAdjustmentPivot(groupedData) {
     `;
     
     data.details.forEach(det => {
-       detailsHtml += `
-         <tr>
-           <td>${det.date}</td>
-           <td>${det.operator}</td>
-           <td style="font-family:var(--font-mono);">${det.ref}</td>
-           <td class="num-cell">${formatMoney(det.cashIn, currSym)}</td>
-           <td class="num-cell">${formatMoney(det.cashOut, currSym)}</td>
-           <td style="max-width:250px; word-break:break-word;">${det.remarks}</td>
-         </tr>
-       `;
+        detailsHtml += `
+          <tr>
+            <td>${det.date}</td>
+            <td>${det.operator}</td>
+            <td style="font-family:var(--font-mono);">${det.ref}</td>
+            <td class="num-cell">${formatMoney(det.cashIn, currSym)}</td>
+            <td class="num-cell">${formatMoney(det.cashOut, currSym)}</td>
+            <td style="max-width:250px; word-break:break-word;">${det.remarks}</td>
+          </tr>
+        `;
     });
     
     detailsHtml += `</tbody></table></div></td>`;
@@ -2559,7 +2594,9 @@ function renderManualAdjustmentPivot(groupedData) {
 function extractDataFromRows(rows) {
   let branch = "—", dateRange = "—", endBal = 0, currency = "PHP";
   let items = [];
+  let accumulatedShortages = [];
   let currentCategory = "Cash";
+  let isShortageSection = false;
 
   rows.forEach(row => {
     let particular = String(row[0] || '').trim();
@@ -2576,7 +2613,37 @@ function extractDataFromRows(rows) {
     if (particular === 'Cash Transactions') { currentCategory = "Cash"; return; }
     if (particular === 'Non-Cash Transactions') { currentCategory = "Non-Cash"; return; }
 
-    if (particular.toLowerCase() === 'particulars' || particular === '' || particular.includes('M LHUILLIER') || particular.includes('BC TRANSACTION') || particular.includes('(BCTSR)') || particular.startsWith('•') || particular === 'Legend' || particular.toLowerCase().includes('accumulated cash shortage') || particular.toLowerCase().includes('resource')) {
+    if (particular.toLowerCase().includes('current day cash shortage')) {
+      let shortageAmt = parseNum(row[3] || row[4] || row[2]);
+      if (shortageAmt > 0) {
+        accumulatedShortages.push({
+          resource: 'Current Day Cash Shortage',
+          coh: 0,
+          givenVault: 0,
+          shortage: shortageAmt
+        });
+      }
+      return;
+    }
+
+    if (particular.toLowerCase().includes('accumulated cash shortage')) {
+      isShortageSection = true;
+      return;
+    }
+
+    if (isShortageSection) {
+      if (particular.toLowerCase() !== 'resource' && particular !== '') {
+        accumulatedShortages.push({
+          resource: particular,
+          coh: parseNum(row[1]),
+          givenVault: parseNum(row[2]),
+          shortage: parseNum(row[3])
+        });
+      }
+      return;
+    }
+
+    if (particular.toLowerCase() === 'particulars' || particular === '' || particular.includes('M LHUILLIER') || particular.includes('BC TRANSACTION') || particular.includes('(BCTSR)') || particular.startsWith('•') || particular === 'Legend' || particular.toLowerCase().includes('resource')) {
       return;
     }
 
@@ -2606,13 +2673,15 @@ function extractDataFromRows(rows) {
       items.push({ category: currentCategory, particular, qty: qtyDisplay, cashIn: valIn, cashOut: valOut, amount });
     }
   });
-  return { branch, dateRange, endBal, currency, items };
+  return { branch, dateRange, endBal, currency, items, accumulatedShortages };
 }
 
 function parsePdfLines(pdfRows) {
   let branch = "—", dateRange = "—", endBal = 0, currency = "PHP";
   let items = [];
+  let accumulatedShortages = [];
   let currentCategory = "Cash";
+  let isShortageSection = false;
 
   pdfRows.forEach(rowItems => {
     let lineStr = rowItems.join(" ");
@@ -2635,11 +2704,46 @@ function parsePdfLines(pdfRows) {
     if (lineStr.includes('Cash Transactions')) { currentCategory = "Cash"; return; }
     if (lineStr.includes('Non-Cash Transactions')) { currentCategory = "Non-Cash"; return; }
 
+    if (lineStr.toLowerCase().includes('current day cash shortage')) {
+      let numbers = rowItems.filter(str => /^[\d,]+(\.\d+)?$/.test(str.replace(/,/g, '')));
+      if (numbers.length > 0) {
+        accumulatedShortages.push({
+          resource: 'Current Day Cash Shortage',
+          coh: 0,
+          givenVault: 0,
+          shortage: parseNum(numbers[0])
+        });
+      }
+      return;
+    }
+
+    if (lineStr.toLowerCase().includes('accumulated cash shortage')) {
+      isShortageSection = true;
+      return;
+    }
+
+    if (isShortageSection) {
+      let numbers = rowItems.filter(str => /^[\d,]+(\.\d+)?$/.test(str.replace(/,/g, '')));
+      if (numbers.length >= 3) {
+        let firstNumIdx = rowItems.findIndex(str => /^[\d,]+(\.\d+)?$/.test(str.replace(/,/g, '')));
+        let resourceName = rowItems.slice(0, firstNumIdx).join(" ").trim();
+        if (resourceName && resourceName.toLowerCase() !== 'resource') {
+          accumulatedShortages.push({
+            resource: resourceName,
+            coh: parseNum(numbers[0]),
+            givenVault: parseNum(numbers[1]),
+            shortage: parseNum(numbers[2])
+          });
+        }
+      }
+      return;
+    }
+
     let numbers = rowItems.filter(str => /^[\d,]+(\.\d+)?$/.test(str.replace(/,/g, '')));
     if (numbers.length > 0) {
       let firstNumIdx = rowItems.findIndex(str => /^[\d,]+(\.\d+)?$/.test(str.replace(/,/g, '')));
       let particular = rowItems.slice(0, firstNumIdx).join(" ").trim();
-      if (particular && !particular.includes("Ending Balance") && !particular.includes("Beginning Balance") && !particular.includes("Particulars") && !particular.startsWith("•") && !particular.toLowerCase().includes("accumulated cash shortage") && !particular.toLowerCase().includes("resource")) {
+      if (particular && !particular.includes("Ending Balance") && !particular.includes("Beginning Balance") && !particular.includes("Particulars") && !particular.startsWith("•") && !particular.toLowerCase().includes("resource")) {
         let qtyDisplay = '—';
         let amount = 0, cashIn = 0, cashOut = 0;
 
@@ -2680,7 +2784,7 @@ function parsePdfLines(pdfRows) {
       }
     }
   });
-  return { branch, dateRange, endBal, currency, items };
+  return { branch, dateRange, endBal, currency, items, accumulatedShortages };
 }
 
 function handleManualInput(evt, itemKey) {
@@ -2743,13 +2847,10 @@ function renderReconciliationTable(data) {
     let itemKey = item.particular;
     let rule = REPORT_RULES[item.particular];
 
-    // CHECK FOR REMARKS-ONLY ITEMS INCLUDING SHORTAGE, RESOURCE, AND PERSON NAMES
-    let isPersonName = item.particular.includes(",") && !item.particular.toLowerCase().includes("fund transfer");
+    // AUTOMATIC REMARKS-ONLY FOR ONLINE PAYMENTS AND ALL NON-CASH TRANSACTIONS EXCEPT RENEWAL ANYWHERE PROCESS
     let isRemarksOnly = (item.category === "Non-Cash" && item.particular !== "Renewal Anywhere Process") ||
-                        item.particular.toLowerCase().includes("current day cash shortage") ||
-                        item.particular.toLowerCase().includes("resource") ||
-                        item.particular.toLowerCase().includes("accumulated cash shortage") ||
-                        isPersonName;
+                        item.particular.toLowerCase().includes("online payments") ||
+                        item.particular.toLowerCase().includes("resource");
 
     if (isRemarksOnly) {
       rule = { isRemarks: true };
