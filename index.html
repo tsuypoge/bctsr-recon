@@ -2643,13 +2643,18 @@ function parsePdfLines(pdfRows) {
         let qtyDisplay = '—';
         let amount = 0, cashIn = 0, cashOut = 0;
 
-        let isCashOutItem = isStrictCashOutParticular(particular);
+        let isPersonName = particular.includes(",") && !particular.toLowerCase().includes("fund transfer");
 
-        if (numbers.length >= 3) {
+        if (isPersonName && numbers.length >= 3) {
+           qtyDisplay = "—";
+           cashIn = parseNum(numbers[0]);
+           cashOut = parseNum(numbers[2]);
+        } else if (numbers.length >= 3) {
            qtyDisplay = parseInt(numbers[0]); 
            cashIn = parseNum(numbers[1]);
            cashOut = parseNum(numbers[2]);
         } else if (numbers.length === 2) {
+           let isCashOutItem = isStrictCashOutParticular(particular);
            if (!numbers[0].includes('.')) {
               qtyDisplay = parseInt(numbers[0]); 
               let val = parseNum(numbers[1]);
@@ -2665,6 +2670,7 @@ function parsePdfLines(pdfRows) {
               cashOut = parseNum(numbers[1]);
            }
         } else if (numbers.length === 1) { 
+          let isCashOutItem = isStrictCashOutParticular(particular);
           let val = parseNum(numbers[0]); 
           if (isCashOutItem) {
             cashOut = val;
@@ -2879,6 +2885,10 @@ function renderReconciliationTable(data) {
     let remarkVarianceTag = currentRemark ? `<span class="remark-tag-display" style="${noteStyle}">Note: ${currentRemark}</span>` : '';
     const tr = document.createElement('tr');
     tr.className = "hoverable";
+
+    // OVERRIDE DISPLAY FOR PERSON/RESOURCE ACCUMULATED CASH SHORTAGE ROWS
+    let displayQty = isPersonName ? '—' : item.qty;
+
     tr.innerHTML = `
       <td>
         <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
@@ -2886,7 +2896,7 @@ function renderReconciliationTable(data) {
           <span class="recon-details">| Source: ${matchedSheet}</span>
         </div>
       </td>
-      <td class="num-cell" style="text-align:center;">${item.qty}</td>
+      <td class="num-cell" style="text-align:center;">${displayQty}</td>
       <td class="num-cell light-num">${formatMoney(item.cashIn, currSym)}</td>
       <td class="num-cell light-num">${formatMoney(item.cashOut, currSym)}</td>
       <td class="num-cell" style="text-align:center; background:#f8fafc;">${reportQty !== null ? reportQty : '—'}</td>
@@ -2900,7 +2910,7 @@ function renderReconciliationTable(data) {
       <td style="text-align:center;">${actionCellHtml}</td>
     `;
     tbody.appendChild(tr);
-  }
+  });
 }
 </script>
 </body>
