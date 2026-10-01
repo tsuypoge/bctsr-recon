@@ -637,7 +637,7 @@ function sumBPIVybe(sheetData) {
     if (amtCol !== -1) break;
   }
 
-  if (amtCol === -1) amtCol = 11; // Fallback to Column L (Index 11) for Amount
+  if (amtCol === -1) amtCol = 11;
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
@@ -801,7 +801,6 @@ function countIntlSendout(sheetData, targetCurr = "PHP") {
   return count;
 }
 
-// DYNAMIC BILLS PAYMENT CALCULATORS
 function sumBPPrincipal(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amtCol = -1, headerIdx = -1;
@@ -820,7 +819,7 @@ function sumBPPrincipal(sheetData) {
     if (amtCol !== -1) break;
   }
 
-  if (amtCol === -1) amtCol = 9; // Fallback: Column J (Amount Paid)
+  if (amtCol === -1) amtCol = 9;
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
@@ -852,7 +851,7 @@ function sumBPCharges(sheetData) {
     if (chargeCol !== -1) break;
   }
 
-  if (chargeCol === -1) chargeCol = 10; // Fallback: Column K (Charge)
+  if (chargeCol === -1) chargeCol = 10;
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
@@ -897,7 +896,6 @@ function countBPRows(sheetData) {
   return count > 0 ? count : countRows(sheetData);
 }
 
-// MCASH CASH IN & SERVICE CHARGE CALCULATORS
 function sumMCashCashIn(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amountCol = -1, headerIdx = -1;
@@ -986,7 +984,6 @@ function countMCashCashIn(sheetData) {
   return count;
 }
 
-// JEWELRY SALES CALCULATORS (WITH BRANCH FILTERING)
 function sumJewelryNetSales(sheetData, branchName) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
 
@@ -1145,7 +1142,6 @@ function countJewelrySales(sheetData, branchName) {
   return countRows(sheetData);
 }
 
-// POS INSURANCE SALES CALCULATORS
 function sumInsuranceSales(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let total = 0;
@@ -1206,7 +1202,6 @@ function countInsuranceSales(sheetData) {
   return count;
 }
 
-// KPPO CALCULATORS
 function sumKPPOAmount(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let amountCol = -1, headerIdx = -1;
@@ -1275,7 +1270,6 @@ function countKPPOQty(sheetData) {
   return qty;
 }
 
-// MLG PO CALCULATORS (STRICTLY READS COLUMN N = INDEX 13 FOR CURRENCY & COLUMN P = INDEX 15 FOR PO AMOUNT)
 function sumMLGPO(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let totalAmt = 0;
@@ -1322,7 +1316,6 @@ function countMLGPO(sheetData) {
   return count;
 }
 
-// B2FD CALCULATORS
 function sumB2FD(sheetData, branchName, targetCurr = "PHP") {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let total = 0;
@@ -1461,7 +1454,6 @@ function countB2FD(sheetData, branchName, targetCurr = "PHP") {
   return count;
 }
 
-// ROBUST B2B CALCULATORS
 function sumB2B(sheetData, keyword, targetCurr = "PHP") {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let searchKey = keyword.toLowerCase().trim();
@@ -1655,10 +1647,13 @@ const REPORT_RULES = {
   "KP Domestic Payout": { sheet: "KPPO", getSum: (data) => sumKPPOAmount(data), getQty: (data) => countKPPOQty(data) },
 
   "Bills Payment Principal": { sheet: "BP", altSheet: "BILLS PAYMENT", getSum: (data) => sumBPPrincipal(data), getQty: (data) => countBPRows(data) },
-  "Bills Payment Charges": { sheet: "BP", altSheet: "BILLS PAYMENT", getSum: (data) => sumBPCharges(data), getQty: (data) => countBPCharges(data) },
+  "Bills Payment Charges": { sheet: "BP", altSheet: "BILLS PAYMENT", getSum: (data) => sumBPCharges(data), getQty: (data) => countBPRows(data) },
 
   "BPI Vybe": { sheet: "BPI VYBE", getSum: (data) => sumBPIVybe(data), getQty: (data) => countBPIVybe(data) },
   "BPI Vybe Sendout": { sheet: "BPI VYBE", getSum: (data) => sumBPIVybe(data), getQty: (data) => countBPIVybe(data) },
+
+  "Online Payments": { sheet: "ONLINE PAYMENTS", altSheet: "E-PAYMENTS", getSum: (data) => sumCol(data, 3), getQty: (data) => countRows(data) },
+  "QCL Renewal thru E-Wallet": { sheet: "E-WALLET", altSheet: "EWALLET", getSum: (data) => sumCol(data, 3), getQty: (data) => countRows(data) },
 
   "Remit to Account": { sheet: "QRPH", getSum: (data) => sumCol(data, 11), getQty: (data) => countRows(data) },
   "Remit to Account Charges": { sheet: "QRPH", getSum: (data) => sumCol(data, 10), getQty: (data) => countRows(data) },
@@ -2284,7 +2279,7 @@ function parsePdfRowsPromise(file) {
   });
 }
 
-// REPORT UPLOAD LOGIC (ISOLATED TO ACTIVE CURRENCY TAB ONLY)
+// REPORT UPLOAD LOGIC
 async function handleSubReportUpload(evt, itemKey) {
   const files = Array.from(evt.target.files);
   if (!files || files.length === 0) return;
@@ -2310,11 +2305,8 @@ async function handleSubReportUpload(evt, itemKey) {
       if (!bData.parsedSheetsStore[activeCurrencyTab]) {
         bData.parsedSheetsStore[activeCurrencyTab] = {};
       }
-      if (!bData.parsedSheetsStore[activeCurrencyTab][sheetTarget]) {
-        bData.parsedSheetsStore[activeCurrencyTab][sheetTarget] = [];
-      }
-      bData.parsedSheetsStore[activeCurrencyTab][sheetTarget] = 
-        bData.parsedSheetsStore[activeCurrencyTab][sheetTarget].concat(newSheetData);
+      
+      bData.parsedSheetsStore[activeCurrencyTab][sheetTarget] = newSheetData;
     }
   }
 
@@ -2323,7 +2315,6 @@ async function handleSubReportUpload(evt, itemKey) {
   evt.target.value = '';
 }
 
-// REPORT REMOVAL (CLEARS FOR ACTIVE CURRENCY TAB ONLY)
 function removeSubReport(itemKey) {
   let rule = REPORT_RULES[itemKey] || REPORT_RULES[itemKey.split('_')[0]];
   let sheetTarget = rule ? rule.sheet : itemKey;
@@ -2588,7 +2579,6 @@ function extractDataFromRows(rows) {
     let valIn = parseNum(row[3]);
     let valOut = parseNum(row[4]);
 
-    // STRICT CHECK FOR CASHOUT PARTICULARS
     let isCashOutItem = isStrictCashOutParticular(particular);
 
     if (isCashOutItem) {
@@ -2723,7 +2713,7 @@ function renderReconciliationTable(data) {
 
   const tbody = document.getElementById('recon-body');
   tbody.innerHTML = '';
-  if (data.items.length === 0) {
+  if (!data || !data.items || data.items.length === 0) {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:40px; color:var(--text-muted);">No valid transaction rows found in the file.</td></tr>`;
     return;
   }
@@ -2737,7 +2727,10 @@ function renderReconciliationTable(data) {
 
   let posJewelrySeen = 0;
 
-  data.items.forEach((item, idx) => {
+  for (let idx = 0; idx < data.items.length; idx++) {
+    let item = data.items[idx];
+    if (!item) continue;
+
     let reportTotal = null, reportQty = null, matchedSheet = "No Report", isManual = false, isRemarks = false, hasSubReport = false;
     
     let itemKey = item.particular;
@@ -2762,7 +2755,7 @@ function renderReconciliationTable(data) {
         isManual = true; matchedSheet = "Manual Input";
         reportTotal = manualInputs[itemKey] !== undefined ? manualInputs[itemKey] : null;
       } else {
-        matchedSheet = rule.sheet;
+        matchedSheet = rule.sheet || "Report";
         
         let activeSheet = null;
         if (rule.sheet && sheetsStore[rule.sheet]) {
@@ -2771,34 +2764,40 @@ function renderReconciliationTable(data) {
           activeSheet = sheetsStore[rule.altSheet];
         }
         
-        if (item.particular === "Fund Transfer Given to BC/HO") {
-          let b2bSheet = sheetsStore["B2B"] || sheetsStore["B2B PHP"];
-          let b2fdSheet = sheetsStore["B2FD"];
-          let hasB2B = b2bSheet && b2bSheet.length > 0;
-          let hasB2FD = b2fdSheet && b2fdSheet.length > 0;
-          if (hasB2B || hasB2FD) {
-            hasSubReport = true;
-            reportTotal = rule.getSum(data, data.branch, data.items, curr);
-            reportQty = rule.getQty ? rule.getQty(data, data.branch, data.items, curr) : '—';
-            if (hasB2B && hasB2FD) {
-              matchedSheet = "B2B + B2FD";
-            } else if (hasB2FD) {
-              matchedSheet = "B2FD";
+        try {
+          if (item.particular === "Fund Transfer Given to BC/HO") {
+            let b2bSheet = sheetsStore["B2B"] || sheetsStore["B2B PHP"];
+            let b2fdSheet = sheetsStore["B2FD"];
+            let hasB2B = b2bSheet && b2bSheet.length > 0;
+            let hasB2FD = b2fdSheet && b2fdSheet.length > 0;
+            if (hasB2B || hasB2FD) {
+              hasSubReport = true;
+              reportTotal = rule.getSum(data, data.branch, data.items, curr);
+              reportQty = rule.getQty ? rule.getQty(data, data.branch, data.items, curr) : '—';
+              if (hasB2B && hasB2FD) {
+                matchedSheet = "B2B + B2FD";
+              } else if (hasB2FD) {
+                matchedSheet = "B2FD";
+              } else {
+                matchedSheet = "B2B";
+              }
             } else {
-              matchedSheet = "B2B";
+              matchedSheet = `<span style="color:#dc2626;">Sheet 'B2B/B2FD' Missing</span>`;
             }
+          } else if (activeSheet && activeSheet.length > 0) {
+            hasSubReport = true;
+            reportTotal = rule.getSum(activeSheet, data.branch, data.items, curr);
+            reportQty = rule.getQty ? rule.getQty(activeSheet, data.branch, data.items, curr) : '—';
           } else {
-            matchedSheet = `<span style="color:#dc2626;">Sheet 'B2B/B2FD' Missing</span>`;
+            matchedSheet = `<span style="color:#dc2626;">Sheet '${matchedSheet}' Missing</span>`;
           }
-        } else if (activeSheet && activeSheet.length > 0) {
-          hasSubReport = true;
-          reportTotal = rule.getSum(activeSheet, data.branch, data.items, curr);
-          reportQty = rule.getQty ? rule.getQty(activeSheet, data.branch, data.items, curr) : '—';
-        } else {
-          matchedSheet = `<span style="color:#dc2626;">Sheet '${matchedSheet}' Missing</span>`;
+        } catch (err) {
+          console.warn("Error calculating report totals for item:", item.particular, err);
+          matchedSheet = `<span style="color:#dc2626;">Sheet Error</span>`;
         }
       }
     }
+
     let diff = reportTotal !== null ? (reportTotal - item.amount) : null;
     let statusHtml = `<span class="status-badge pending">No Report</span>`, varText = "—", varColor = "";
     if (isRemarks) {
@@ -2840,7 +2839,7 @@ function renderReconciliationTable(data) {
         </div>
       `;
     } else {
-      let removeBtnHtml = hasSubReport ? `<button class="btn-remove-sub hide-print" onclick="removeSubReport('${itemKey.replace(/'/g, "\\'")}')" title="Remove Report Data">🗑️</button>` : '';
+      let removeBtnHtml = hasSubReport ? `<button class="btn-remove-sub hide-print" onclick="removeSubReport('${itemKey.replace(/'/g, "\\'")}')" title="Remove Report Data">🗑</button>` : '';
       let uploadBtnHtml = `
         <div class="sub-upload-wrapper hide-print">
           <button class="btn-upload-sub" onclick="document.getElementById('sub-file-${idx}').click()" title="Upload Report">📤</button>
@@ -2886,7 +2885,7 @@ function renderReconciliationTable(data) {
       <td style="text-align:center;">${actionCellHtml}</td>
     `;
     tbody.appendChild(tr);
-  });
+  }
 }
 </script>
 </body>
