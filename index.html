@@ -2645,10 +2645,11 @@ function parsePdfLines(pdfRows) {
 
         let isPersonName = particular.includes(",") && !particular.toLowerCase().includes("fund transfer");
 
+        // ACCUMULATED CASH SHORTAGE (3 MONETARY VALUES) HANDLING
         if (isPersonName && numbers.length >= 3) {
            qtyDisplay = "—";
-           cashIn = parseNum(numbers[0]);
-           cashOut = parseNum(numbers[2]);
+           cashIn = parseNum(numbers[0]);  // Cash-on-Hand (905,297.00 / 905,757.00)
+           cashOut = parseNum(numbers[2]); // Cash Shortage (58,095.00 / 9,803.00)
         } else if (numbers.length >= 3) {
            qtyDisplay = parseInt(numbers[0]); 
            cashIn = parseNum(numbers[1]);
@@ -2886,7 +2887,6 @@ function renderReconciliationTable(data) {
     const tr = document.createElement('tr');
     tr.className = "hoverable";
 
-    // OVERRIDE DISPLAY FOR PERSON/RESOURCE ACCUMULATED CASH SHORTAGE ROWS
     let displayQty = isPersonName ? '—' : item.qty;
 
     tr.innerHTML = `
