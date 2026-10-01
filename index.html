@@ -2643,18 +2643,13 @@ function parsePdfLines(pdfRows) {
         let qtyDisplay = '—';
         let amount = 0, cashIn = 0, cashOut = 0;
 
-        let isPersonName = particular.includes(",") && !particular.toLowerCase().includes("fund transfer");
+        let isCashOutItem = isStrictCashOutParticular(particular);
 
-        if (isPersonName && numbers.length >= 3) {
-           qtyDisplay = "—";
-           cashIn = parseNum(numbers[0]);
-           cashOut = parseNum(numbers[2]);
-        } else if (numbers.length >= 3) {
+        if (numbers.length >= 3) {
            qtyDisplay = parseInt(numbers[0]); 
            cashIn = parseNum(numbers[1]);
            cashOut = parseNum(numbers[2]);
         } else if (numbers.length === 2) {
-           let isCashOutItem = isStrictCashOutParticular(particular);
            if (!numbers[0].includes('.')) {
               qtyDisplay = parseInt(numbers[0]); 
               let val = parseNum(numbers[1]);
@@ -2670,7 +2665,6 @@ function parsePdfLines(pdfRows) {
               cashOut = parseNum(numbers[1]);
            }
         } else if (numbers.length === 1) { 
-          let isCashOutItem = isStrictCashOutParticular(particular);
           let val = parseNum(numbers[0]); 
           if (isCashOutItem) {
             cashOut = val;
@@ -2906,7 +2900,7 @@ function renderReconciliationTable(data) {
       <td style="text-align:center;">${actionCellHtml}</td>
     `;
     tbody.appendChild(tr);
-  });
+  }
 }
 </script>
 </body>
