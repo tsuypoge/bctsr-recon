@@ -637,7 +637,7 @@ function sumBPIVybe(sheetData) {
     if (amtCol !== -1) break;
   }
 
-  if (amtCol === -1) amtCol = 11; // Fallback to Column L (Index 11) for Amount
+  if (amtCol === -1) amtCol = 11;
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
@@ -820,7 +820,7 @@ function sumBPPrincipal(sheetData) {
     if (amtCol !== -1) break;
   }
 
-  if (amtCol === -1) amtCol = 9; // Fallback: Column J (Amount Paid)
+  if (amtCol === -1) amtCol = 9;
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
@@ -852,7 +852,7 @@ function sumBPCharges(sheetData) {
     if (chargeCol !== -1) break;
   }
 
-  if (chargeCol === -1) chargeCol = 10; // Fallback: Column K (Charge)
+  if (chargeCol === -1) chargeCol = 10;
 
   let total = 0;
   for (let i = headerIdx + 1; i < sheetData.length; i++) {
@@ -1275,7 +1275,6 @@ function countKPPOQty(sheetData) {
   return qty;
 }
 
-// MLG PO CALCULATORS (STRICTLY READS COLUMN N = INDEX 13 FOR CURRENCY & COLUMN P = INDEX 15 FOR PO AMOUNT)
 function sumMLGPO(sheetData) {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let totalAmt = 0;
@@ -1322,7 +1321,6 @@ function countMLGPO(sheetData) {
   return count;
 }
 
-// B2FD CALCULATORS
 function sumB2FD(sheetData, branchName, targetCurr = "PHP") {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let total = 0;
@@ -1461,7 +1459,6 @@ function countB2FD(sheetData, branchName, targetCurr = "PHP") {
   return count;
 }
 
-// ROBUST B2B CALCULATORS
 function sumB2B(sheetData, keyword, targetCurr = "PHP") {
   if (!sheetData || !Array.isArray(sheetData)) return 0;
   let searchKey = keyword.toLowerCase().trim();
@@ -2746,10 +2743,13 @@ function renderReconciliationTable(data) {
     let itemKey = item.particular;
     let rule = REPORT_RULES[item.particular];
 
-    // CHECK FOR REMARKS-ONLY ITEMS INCLUDING SHORTAGE & RESOURCE
+    // CHECK FOR REMARKS-ONLY ITEMS INCLUDING SHORTAGE, RESOURCE, AND PERSON NAMES
+    let isPersonName = item.particular.includes(",") && !item.particular.toLowerCase().includes("fund transfer");
     let isRemarksOnly = (item.category === "Non-Cash" && item.particular !== "Renewal Anywhere Process") ||
                         item.particular.toLowerCase().includes("current day cash shortage") ||
-                        item.particular.toLowerCase().includes("resource");
+                        item.particular.toLowerCase().includes("resource") ||
+                        item.particular.toLowerCase().includes("accumulated cash shortage") ||
+                        isPersonName;
 
     if (isRemarksOnly) {
       rule = { isRemarks: true };
